@@ -40,12 +40,13 @@ The tool provides an interactive mode to help the user to
 define the relevant fields.
 """
 
-import enum
 import os
 import subprocess
 
 import click
 import yaml
+
+from release_tools.entry import CategoryChange, ChangelogEntry
 
 
 YAML_FILE_EXTENSION = '.yml'
@@ -93,51 +94,6 @@ class GitHandler:
                                 cwd=cwd, env=env)
         (outs, errs) = proc.communicate()
         return outs.decode('utf-8', errors='surrogateescape')
-
-
-@enum.unique
-class CategoryChange(enum.Enum):
-    """Possible category types."""
-
-    def __new__(cls, value, category, title):
-        obj = object.__new__(cls)
-        obj._value_ = value
-        obj.category = category
-        obj.title = title
-        return obj
-
-    ADDED = (1, 'added', 'New feature')
-    FIXED = (2, 'fixed', 'Bug fix')
-    CHANGED = (3, 'changed', 'Feature change')
-    DEPRECATED = (4, 'deprecated', 'New deprecation')
-    REMOVED = (5, 'removed', 'Feature removal')
-    SECURITY = (6, 'security', 'Security fix')
-    PERFORMANCE = (7, 'performance', 'Performance improvement')
-    OTHER = (8, 'other', 'Other')
-
-    @classmethod
-    def values(cls):
-        return [member.category for member in cls]
-
-
-class ChangelogEntry:
-    """Class to store changelog entries data."""
-
-    def __init__(self, title, category, author, pr=None, notes=None):
-        self.title = title
-        self.category = category
-        self.author = author
-        self.pr = pr
-        self.notes = notes
-
-    def to_dict(self):
-        return {
-            'title': self.title,
-            'category': self.category,
-            'author': self.author,
-            'pull_request': self.pr,
-            'notes': self.notes
-        }
 
 
 def title_prompt():
