@@ -83,3 +83,23 @@ class ChangelogEntry:
             'pull_request': self.pr,
             'notes': self.notes
         }
+
+    @classmethod
+    def from_yaml_file(cls, filepath):
+        """Create an instance from a YAML file."""
+
+        with open(filepath, mode='r') as fd:
+            data = yaml.safe_load(fd)
+
+        try:
+            entry = cls(data['title'],
+                        data['category'],
+                        data['author'],
+                        pr=data['pull_request'],
+                        notes=data['notes'])
+        except KeyError as exc:
+            msg = "invalid format for {}; '{}' attribute not found".format(filepath,
+                                                                           exc.args[0])
+            raise Exception(msg)
+
+        return entry

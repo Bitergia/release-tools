@@ -20,6 +20,7 @@
 #     Santiago Dueñas <sduenas@bitergia.com>
 #
 
+import tempfile
 import unittest
 
 from release_tools.entry import CategoryChange, ChangelogEntry
@@ -101,6 +102,37 @@ class TestChangelogEntry(unittest.TestCase):
         entry = ChangelogEntry('last entry', 'added', 'jsmith',
                                pr='42', notes="some notes go here")
         self.assertDictEqual(entry.to_dict(), expected)
+
+    def test_import_from_yaml_file(self):
+        """Check if it imports an entry from a YAML file"""
+
+        with tempfile.NamedTemporaryFile() as fp:
+            fp.write(b"---\ntitle: last entry\ncategory: added\n")
+            fp.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
+            fp.seek(0)
+
+            expected = {
+                'title': 'last entry',
+                'category': 'added',
+                'author': 'jsmith',
+                'pull_request': '42',
+                'notes': 'some notes go here'
+            }
+
+            entry = ChangelogEntry.from_yaml_file(fp.name)
+            self.assertDictEqual(entry.to_dict(), expected)
+
+    def test_invalid_format_importing_from_yaml_file(self):
+        """Check if an error is raised when the entry is invalid"""
+
+        with tempfile.NamedTemporaryFile() as fp:
+            # The tittle is missing on this file
+            fp.write(b"---category: added\n")
+            fp.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
+            fp.seek(0)
+
+            with self.assertRaisesRegex(Exception, "'title' attribute not found"):
+                ChangelogEntry.from_yaml_file(fp.name)
 
 
 if __name__ == '__main__':
