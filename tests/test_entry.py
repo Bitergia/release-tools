@@ -74,7 +74,7 @@ class TestChangelogEntry(unittest.TestCase):
 
         entry = ChangelogEntry('new entry', 'fixed', 'jdoe')
         self.assertEqual(entry.title, 'new entry')
-        self.assertEqual(entry.category, 'fixed')
+        self.assertEqual(entry.category, CategoryChange.FIXED)
         self.assertEqual(entry.author, 'jdoe')
         self.assertEqual(entry.pr, None)
         self.assertEqual(entry.notes, None)
@@ -82,7 +82,7 @@ class TestChangelogEntry(unittest.TestCase):
         entry = ChangelogEntry('last entry', 'added', 'jsmith',
                                pr='42', notes="some notes go here")
         self.assertEqual(entry.title, 'last entry')
-        self.assertEqual(entry.category, 'added')
+        self.assertEqual(entry.category, CategoryChange.ADDED)
         self.assertEqual(entry.author, 'jsmith')
         self.assertEqual(entry.pr, '42')
         self.assertEqual(entry.notes, 'some notes go here')

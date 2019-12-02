@@ -60,16 +60,25 @@ class ChangelogEntry:
     """Class to store changelog entries data."""
 
     def __init__(self, title, category, author, pr=None, notes=None):
+        self._category = None
         self.title = title
         self.category = category
         self.author = author
         self.pr = pr
         self.notes = notes
 
+    @property
+    def category(self):
+        return self._category
+
+    @category.setter
+    def category(self, value):
+        self._category = CategoryChange[value.upper()]
+
     def to_dict(self):
         return {
             'title': self.title,
-            'category': self.category,
+            'category': self.category.category,
             'author': self.author,
             'pull_request': self.pr,
             'notes': self.notes
