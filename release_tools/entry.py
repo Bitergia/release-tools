@@ -29,6 +29,17 @@
 #
 
 import enum
+import os
+
+import yaml
+
+from release_tools.repo import GitHandler
+
+
+YAML_FILE_EXTENSION = '.yml'
+
+# GNU tar has a 99 character limit
+MAX_FILENAME_LENGTH = 99 - len(YAML_FILE_EXTENSION)
 
 
 @enum.unique
@@ -123,3 +134,22 @@ def read_changelog_entries(dirpath):
         for filepath in os.listdir(dirpath)
         if filepath.endswith('.yml')
     }
+
+
+def determine_changelog_entries_dirpath():
+    """Returns the changelog entries dir path."""
+
+    basepath = GitHandler().root_path
+    dirpath = os.path.join(basepath, 'releases', 'unreleased')
+
+    return dirpath
+
+
+def determine_filepath(dirpath, title):
+    """Returns the changelog entry filename."""
+
+    filename = title.replace(' ', '-').lower()
+    filename = filename[0:MAX_FILENAME_LENGTH - 1] + YAML_FILE_EXTENSION
+    filepath = os.path.join(dirpath, filename)
+
+    return filepath

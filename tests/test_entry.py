@@ -23,10 +23,13 @@
 import os
 import tempfile
 import unittest
+import unittest.mock
 
 from release_tools.entry import (CategoryChange,
                                  ChangelogEntry,
-                                 read_changelog_entries)
+                                 read_changelog_entries,
+                                 determine_changelog_entries_dirpath,
+                                 determine_filepath)
 
 
 class TestCategoryChange(unittest.TestCase):
@@ -200,6 +203,35 @@ class TestReadChangelogEntries(unittest.TestCase):
         with tempfile.TemporaryDirectory() as dirpath:
             entries = read_changelog_entries(dirpath)
             self.assertDictEqual(entries, {})
+
+
+class TestDetermineChangelogEntriesDirPath(unittest.TestCase):
+    """Unit tests for determine_changelog_entries_dirpath"""
+
+    @unittest.mock.patch('release_tools.entry.GitHandler.root_path',
+                         new_callable=unittest.mock.PropertyMock)
+    def test_dirpath(self, mock_root_path):
+        """Check if the function returns the right dirpath"""
+
+        mock_root_path.return_value = "/tmp/repo/"
+
+        expected = "/tmp/repo/releases/unreleased"
+
+        dirpath = determine_changelog_entries_dirpath()
+        self.assertEqual(dirpath, expected)
+
+
+class TestDetermineFilePath(unittest.TestCase):
+    """Unit tests for determine_filepath"""
+
+    def test_filepath(self):
+        """Check it the right filepath is returned"""
+
+        dirpath = "/tmp/repo/releases/unreleased/"
+        expected = os.path.join(dirpath, "my-change.yml")
+
+        filepath = determine_filepath(dirpath, "my change")
+        self.assertEqual(filepath, expected)
 
 
 if __name__ == '__main__':

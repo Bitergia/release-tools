@@ -41,59 +41,14 @@ define the relevant fields.
 """
 
 import os
-import subprocess
 
 import click
 import yaml
 
-from release_tools.entry import CategoryChange, ChangelogEntry
-
-
-YAML_FILE_EXTENSION = '.yml'
-
-# GNU tar has a 99 character limit
-MAX_FILENAME_LENGTH = 99 - len(YAML_FILE_EXTENSION)
-
-
-class GitHandler:
-    """Class to help to run Git commands."""
-
-    def __init__(self):
-        self.gitenv = {
-            'LANG': 'C',
-            'PAGER': '',
-            'HTTP_PROXY': os.getenv('HTTP_PROXY', ''),
-            'HTTPS_PROXY': os.getenv('HTTPS_PROXY', ''),
-            'NO_PROXY': os.getenv('NO_PROXY', ''),
-            'HOME': os.getenv('HOME', '')
-        }
-
-    @property
-    def root_path(self):
-        path_ = self._get_submodule_root_path()
-
-        if not path_:
-            basepath = self._get_root_path()
-
-        return basepath
-
-    def _get_root_path(self):
-        cmd = ['git', 'rev-parse', '--show-toplevel']
-        root_path = self._exec(cmd, env=self.gitenv).strip('\n')
-        return root_path
-
-    def _get_submodule_root_path(self):
-        cmd = ['git', 'rev-parse', '--show-superproject-working-tree']
-        root_path = self._exec(cmd, env=self.gitenv).strip('\n')
-        return root_path
-
-    @staticmethod
-    def _exec(cmd, cwd=None, env=None):
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                cwd=cwd, env=env)
-        (outs, errs) = proc.communicate()
-        return outs.decode('utf-8', errors='surrogateescape')
+from release_tools.entry import (CategoryChange,
+                                 ChangelogEntry,
+                                 determine_changelog_entries_dirpath,
+                                 determine_filepath)
 
 
 def title_prompt():
@@ -271,25 +226,6 @@ def write_changelog_entry(dirpath, title, content, overwrite=False):
         raise click.ClickException(msg)
     else:
         click.echo("Changelog entry '{}' created".format(filename))
-
-
-def determine_changelog_entries_dirpath():
-    """Returns the changelog entries dir path."""
-
-    basepath = GitHandler().root_path
-    dirpath = os.path.join(basepath, 'releases', 'unreleased')
-
-    return dirpath
-
-
-def determine_filepath(dirpath, title):
-    """Returns the changelog entry filename."""
-
-    filename = title.replace(' ', '-').lower()
-    filename = filename[0:MAX_FILENAME_LENGTH - 1] + YAML_FILE_EXTENSION
-    filepath = os.path.join(dirpath, filename)
-
-    return filepath
 
 
 if __name__ == '__main__':
