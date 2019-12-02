@@ -103,3 +103,23 @@ class ChangelogEntry:
             raise Exception(msg)
 
         return entry
+
+
+def read_changelog_entries(dirpath):
+    """Read the changelog entries from a directory.
+
+    The function reads the changelog entry fields from a directory,
+    converting data into `ChangelogEntry` instances. The instances
+    are returned in a `dict`, where the keys are the path to the
+    their files.
+
+    :param dirpath: path to the directory storing the changelog entries
+
+    :returns: `dict` of `ChangelogEntry` instances; keys are the path
+        to corresponding files.
+    """
+    return {
+        filepath: ChangelogEntry.from_yaml_file(os.path.join(dirpath, filepath))
+        for filepath in os.listdir(dirpath)
+        if filepath.endswith('.yml')
+    }

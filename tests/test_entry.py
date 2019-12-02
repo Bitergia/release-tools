@@ -20,10 +20,13 @@
 #     Santiago Dueñas <sduenas@bitergia.com>
 #
 
+import os
 import tempfile
 import unittest
 
-from release_tools.entry import CategoryChange, ChangelogEntry
+from release_tools.entry import (CategoryChange,
+                                 ChangelogEntry,
+                                 read_changelog_entries)
 
 
 class TestCategoryChange(unittest.TestCase):
@@ -106,10 +109,10 @@ class TestChangelogEntry(unittest.TestCase):
     def test_import_from_yaml_file(self):
         """Check if it imports an entry from a YAML file"""
 
-        with tempfile.NamedTemporaryFile() as fp:
-            fp.write(b"---\ntitle: last entry\ncategory: added\n")
-            fp.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
-            fp.seek(0)
+        with tempfile.NamedTemporaryFile() as f:
+            f.write(b"---\ntitle: last entry\ncategory: added\n")
+            f.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
+            f.seek(0)
 
             expected = {
                 'title': 'last entry',
@@ -119,20 +122,84 @@ class TestChangelogEntry(unittest.TestCase):
                 'notes': 'some notes go here'
             }
 
-            entry = ChangelogEntry.from_yaml_file(fp.name)
+            entry = ChangelogEntry.from_yaml_file(f.name)
             self.assertDictEqual(entry.to_dict(), expected)
 
     def test_invalid_format_importing_from_yaml_file(self):
         """Check if an error is raised when the entry is invalid"""
 
-        with tempfile.NamedTemporaryFile() as fp:
+        with tempfile.NamedTemporaryFile() as f:
             # The tittle is missing on this file
-            fp.write(b"---category: added\n")
-            fp.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
-            fp.seek(0)
+            f.write(b"---category: added\n")
+            f.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
+            f.seek(0)
 
             with self.assertRaisesRegex(Exception, "'title' attribute not found"):
-                ChangelogEntry.from_yaml_file(fp.name)
+                ChangelogEntry.from_yaml_file(f.name)
+
+
+class TestReadChangelogEntries(unittest.TestCase):
+    """Unit tests for read_changelog_entries function"""
+
+    def test_read_entries(self):
+        """Check if it imports a set of entries"""
+
+        titles = ['first change', 'next change', 'last change']
+        categories = [
+            CategoryChange.ADDED,
+            CategoryChange.FIXED,
+            CategoryChange.DEPRECATED
+        ]
+        authors = ['jsmith', 'jdoe', 'jsmith']
+
+        with tempfile.TemporaryDirectory() as dirpath:
+            # Create some entries
+            for x in range(0, 3):
+                filepath = os.path.join(dirpath, str(x) + '.yml')
+
+                with open(filepath, mode='w') as f:
+                    msg = "---\ntitle: {}\ncategory: {}\n"
+                    msg += "author: {}\npull_request: '{}'\nnotes: null\n"
+                    msg = msg.format(titles[x], categories[x].category, authors[x], x)
+                    f.write(msg)
+
+            # This non-yml file is not read
+            filepath = os.path.join(dirpath, 'no-yml.txt')
+
+            with open(filepath, mode='w') as f:
+                f.write("no YAML file")
+
+            # Import the entries
+            entries = read_changelog_entries(dirpath)
+            self.assertEqual(len(entries), 3)
+
+            entry = entries['0.yml']
+            self.assertEqual(entry.title, 'first change')
+            self.assertEqual(entry.category, CategoryChange.ADDED)
+            self.assertEqual(entry.author, 'jsmith')
+            self.assertEqual(entry.pr, '0')
+            self.assertEqual(entry.notes, None)
+
+            entry = entries['1.yml']
+            self.assertEqual(entry.title, 'next change')
+            self.assertEqual(entry.category, CategoryChange.FIXED)
+            self.assertEqual(entry.author, 'jdoe')
+            self.assertEqual(entry.pr, '1')
+            self.assertEqual(entry.notes, None)
+
+            entry = entries['2.yml']
+            self.assertEqual(entry.title, 'last change')
+            self.assertEqual(entry.category, CategoryChange.DEPRECATED)
+            self.assertEqual(entry.author, 'jsmith')
+            self.assertEqual(entry.pr, '2')
+            self.assertEqual(entry.notes, None)
+
+    def test_read_entries_empty_dir(self):
+        """Check if nothing is imported when reading an empty directory"""
+
+        with tempfile.TemporaryDirectory() as dirpath:
+            entries = read_changelog_entries(dirpath)
+            self.assertDictEqual(entries, {})
 
 
 if __name__ == '__main__':
