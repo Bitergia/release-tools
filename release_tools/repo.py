@@ -46,6 +46,25 @@ class GitHandler:
 
         return basepath
 
+    def find_file(self, filename):
+        """Find a file in the repository.
+
+        Look for a tracked file that matches the given expression
+        in the repository. The method returns the path to that
+        file if exists; otherwise it returns `None`.
+
+        :param filename: name of the file to look for; wildcards allowed
+
+        :returns: the path to file or `None` when the file does not exist.
+        """
+        cmd = ['git', 'ls-files', filename]
+        filepath = self._exec(cmd, env=self.gitenv).strip('\n')
+
+        if not filepath:
+            return None
+        else:
+            return filepath.strip('\n')
+
     def _get_root_path(self):
         cmd = ['git', 'rev-parse', '--show-toplevel']
         root_path = self._exec(cmd, env=self.gitenv).strip('\n')
