@@ -33,10 +33,12 @@ setup(name="release-tools",
       ],
       install_requires=[
           'click>=0.7.0',
-          'PyYAML>=5.1.2'
+          'PyYAML>=5.1.2',
+          'semver>=2.9.0',
       ],
       entry_points="""
           [console_scripts]
           changelog=release_tools.changelog:changelog
+          semverup=release_tools.semverup:semverup
       """,
       zip_safe=False)
