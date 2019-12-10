@@ -40,5 +40,6 @@ setup(name="release-tools",
           [console_scripts]
           changelog=release_tools.changelog:changelog
           semverup=release_tools.semverup:semverup
+          notes=release_tools.notes:notes
       """,
       zip_safe=False)
