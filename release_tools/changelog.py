@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015-2019 Bitergia
+# Copyright (C) 2015-2020 Bitergia
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,8 +47,8 @@ import yaml
 
 from release_tools.entry import (CategoryChange,
                                  ChangelogEntry,
-                                 determine_changelog_entries_dirpath,
                                  determine_filepath)
+from release_tools.project import Project
 
 
 def title_prompt():
@@ -149,7 +149,8 @@ def changelog(title, category, dry_run, overwrite, editor):
     """
     click.echo()
 
-    dirpath = check_changelog_entries_dir()
+    project = Project(os.getcwd())
+    dirpath = check_changelog_entries_dir(project)
     content = create_changelog_entry_content(title, category,
                                              run_editor=editor)
 
@@ -162,10 +163,10 @@ def changelog(title, category, dry_run, overwrite, editor):
                               overwrite=overwrite)
 
 
-def check_changelog_entries_dir():
+def check_changelog_entries_dir(project):
     """Check and create the changelog directory."""
 
-    dirpath = determine_changelog_entries_dirpath()
+    dirpath = project.unreleased_changes_path
 
     if os.path.exists(dirpath):
         return dirpath

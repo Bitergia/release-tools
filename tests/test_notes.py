@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015-2019 Bitergia
+# Copyright (C) 2015-2020 Bitergia
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -132,7 +132,8 @@ class TestNotes(unittest.TestCase):
                 fd.write(msg)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_release_notes(self, mock_dirpath, mock_utcnow):
         """Check it it generates a release notes file"""
 
@@ -141,10 +142,10 @@ class TestNotes(unittest.TestCase):
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
 
-            self.setup_unreleased_entries(dirpath)
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            self.setup_unreleased_entries(changes_path)
 
             # Run the script command
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
@@ -157,7 +158,8 @@ class TestNotes(unittest.TestCase):
             self.assertEqual(text, RELEASE_NOTES_CONTENT)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_dry_run(self, mock_dirpath, mock_utcnow):
         """Check it it composes the release notes but does not create a file"""
 
@@ -166,10 +168,10 @@ class TestNotes(unittest.TestCase):
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
 
-            self.setup_unreleased_entries(dirpath)
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            self.setup_unreleased_entries(changes_path)
 
             # Run the script command
             result = runner.invoke(notes, ['--dry-run', 'release-tools', '0.8.10'])
@@ -181,7 +183,8 @@ class TestNotes(unittest.TestCase):
             self.assertEqual(result.stdout, RELEASE_NOTES_CONTENT + '\n')
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_release_notes_no_entry_files(self, mock_dirpath, mock_utcnow):
         """Check it it generates a release notes file when there are not entry files"""
 
@@ -190,9 +193,10 @@ class TestNotes(unittest.TestCase):
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            os.makedirs(dirpath)
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
+
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            os.makedirs(changes_path)
 
             # Run the script command
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
@@ -205,7 +209,8 @@ class TestNotes(unittest.TestCase):
             self.assertEqual(text, RELEASE_NOTES_EMPTY)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_release_notes_file_is_not_overwritten(self, mock_dirpath, mock_utcnow):
         """Check whether an existing release notes file is not replaced"""
 
@@ -214,18 +219,18 @@ class TestNotes(unittest.TestCase):
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
 
-            self.setup_unreleased_entries(dirpath)
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            self.setup_unreleased_entries(changes_path)
 
             # Create a file first
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
             self.assertEqual(result.exit_code, 0)
 
             # Try to replace it with an empty version
-            for filename in os.listdir(dirpath):
-                filepath = os.path.join(dirpath, filename)
+            for filename in os.listdir(changes_path):
+                filepath = os.path.join(changes_path, filename)
                 os.remove(filepath)
 
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
@@ -242,7 +247,8 @@ class TestNotes(unittest.TestCase):
             self.assertEqual(text, RELEASE_NOTES_CONTENT)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_overwrite_release_notes_file(self, mock_dirpath, mock_utcnow):
         """Check whether an existing release notes file is not replaced"""
 
@@ -251,18 +257,18 @@ class TestNotes(unittest.TestCase):
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
 
-            self.setup_unreleased_entries(dirpath)
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            self.setup_unreleased_entries(changes_path)
 
             # Create a file first
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
             self.assertEqual(result.exit_code, 0)
 
             # Try to replace it with an empty version
-            for filename in os.listdir(dirpath):
-                filepath = os.path.join(dirpath, filename)
+            for filename in os.listdir(changes_path):
+                filepath = os.path.join(changes_path, filename)
                 os.remove(filepath)
 
             result = runner.invoke(notes, ['--overwrite', 'release-tools', '0.8.10'])
@@ -275,17 +281,18 @@ class TestNotes(unittest.TestCase):
             self.assertEqual(text, RELEASE_NOTES_EMPTY)
 
     @unittest.mock.patch('release_tools.notes.compose_release_notes')
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_abort_empty_notes(self, mock_dirpath, mock_compose):
         """Check if it stops the process when the content of release notes is empty"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
 
-            self.setup_unreleased_entries(dirpath)
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            self.setup_unreleased_entries(changes_path)
 
             # Force to return an empty content
             mock_compose.return_value = ""
@@ -297,17 +304,18 @@ class TestNotes(unittest.TestCase):
             self.assertEqual(lines[-2], EMPTY_CONTENT_ERROR)
 
     @unittest.mock.patch('release_tools.notes.read_changelog_entries')
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_error_reading_entries(self, mock_dirpath, mock_read_entries):
         """Check if it stops the process when there is an error reading changelog entries"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
 
-            self.setup_unreleased_entries(dirpath)
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            self.setup_unreleased_entries(changes_path)
 
             # Force to return an error when reading the entries
             mock_read_entries.side_effect = Exception("Invalid changelog entry format")
@@ -318,15 +326,15 @@ class TestNotes(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertEqual(lines[-2], INVALID_CHANGELOG_ENTRY_ERROR)
 
-    @unittest.mock.patch('release_tools.notes.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.basepath',
+                         new_callable=unittest.mock.PropertyMock)
     def test_changelog_dir_not_exists_error(self, mock_dirpath):
         """Check if it returns an error when the changelog dir does not exist"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_dirpath.return_value = fs
 
             # Run the script command
             result = runner.invoke(notes, ['release-tools', '0.8.10'])

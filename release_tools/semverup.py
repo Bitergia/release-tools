@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015-2019 Bitergia
+# Copyright (C) 2015-2020 Bitergia
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,9 +28,8 @@ import click
 import semver
 
 from release_tools.entry import (CategoryChange,
-                                 read_changelog_entries,
-                                 determine_changelog_entries_dirpath)
-from release_tools.repo import GitHandler
+                                 read_changelog_entries)
+from release_tools.project import Project
 
 """
 Script to increment the version number of a package.
@@ -70,11 +69,13 @@ def semverup(dry_run):
     link: https://semver.org/.
     """
     # Get the current version number
-    filepath = find_version_file()
+    project = Project(os.getcwd())
+
+    filepath = find_version_file(project)
     current_version = read_version_number(filepath)
 
     # Determine the new version and produce the output
-    new_version = determine_new_version_number(current_version)
+    new_version = determine_new_version_number(project, current_version)
 
     if not dry_run:
         write_version_number(filepath, new_version)
@@ -82,10 +83,10 @@ def semverup(dry_run):
     click.echo(new_version)
 
 
-def find_version_file():
+def find_version_file(project):
     """Find the version file in the repository."""
 
-    filepath = GitHandler().find_file('*_version.py')
+    filepath = project.version_file
 
     if not filepath:
         raise click.ClickException("version file not found")
@@ -117,10 +118,10 @@ def read_version_number(filepath):
     return version
 
 
-def determine_new_version_number(current_version):
+def determine_new_version_number(project, current_version):
     """Guess the next version number."""
 
-    entries = read_unreleased_changelog_entries()
+    entries = read_unreleased_changelog_entries(project)
 
     bump_patch = False
     bump_minor = False
@@ -146,10 +147,10 @@ def determine_new_version_number(current_version):
     return next_version
 
 
-def read_unreleased_changelog_entries():
+def read_unreleased_changelog_entries(project):
     """Returns entries stored in the unreleased changelog entries dir."""
 
-    dirpath = determine_changelog_entries_dirpath()
+    dirpath = project.unreleased_changes_path
 
     if not os.path.exists(dirpath):
         msg = "changelog entries directory {} does not exist.".format(dirpath)

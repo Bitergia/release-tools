@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015-2019 Bitergia
+# Copyright (C) 2015-2020 Bitergia
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -107,8 +107,10 @@ class TestSemVerUp(unittest.TestCase):
                                 fd.read(), re.MULTILINE).group(1)
         return version
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_version_is_updated(self, mock_verfile, mock_dirpath):
         """Check whether the version is updated"""
 
@@ -132,8 +134,10 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.2.0")
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_dry_run(self, mock_verfile, mock_dirpath):
         """Check whether the version file is not updated in dry mode"""
 
@@ -158,8 +162,10 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_patch_number_is_bumped(self, mock_verfile, mock_dirpath):
         """Check whether the patch number is bumped when there are only fixing changes"""
 
@@ -183,8 +189,10 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.11")
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_minor_number_is_bumped(self, mock_verfile, mock_dirpath):
         """Check whether the patch number is bumped when there are mixed changes"""
 
@@ -209,8 +217,10 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.9.0")
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_version_number_not_bumped_when_empty_changelog_dir(self,
                                                                 mock_verfile,
                                                                 mock_dirpath):
@@ -241,8 +251,10 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_changelog_dir_not_exists_error(self, mock_verfile, mock_dirpath):
         """Check if it returns an error when the changelog dir does not exist"""
 
@@ -268,8 +280,10 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_changelog_invalid_entry_error(self, mock_verfile, mock_dirpath):
         """Check if it returns an error when a changelog entry is invalid"""
 
@@ -304,8 +318,10 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.GitHandler.find_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_version_file_not_found(self, mock_verfile, mock_dirpath):
         """Check whether it fails when the version file is not found"""
 
@@ -326,8 +342,10 @@ class TestSemVerUp(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertEqual(lines[-2], VERSION_FILE_NOT_FOUND)
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.GitHandler.find_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_version_file_not_exists(self, mock_verfile, mock_dirpath):
         """Check whether it fails when the version file does not exist"""
 
@@ -349,8 +367,10 @@ class TestSemVerUp(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertRegex(lines[-2], VERSION_FILE_NOT_EXISTS)
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_version_not_found(self, mock_verfile, mock_dirpath):
         """Check whether it fails when the version string is not found in the file"""
 
@@ -376,8 +396,10 @@ class TestSemVerUp(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertRegex(lines[-2], VERSION_NUMBER_NOT_FOUND)
 
-    @unittest.mock.patch('release_tools.semverup.determine_changelog_entries_dirpath')
-    @unittest.mock.patch('release_tools.semverup.find_version_file')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
+    @unittest.mock.patch('release_tools.project.Project.version_file',
+                         new_callable=unittest.mock.PropertyMock)
     def test_version_invalid_format(self, mock_verfile, mock_dirpath):
         """Check whether it fails when the version file has an invalid format"""
 
