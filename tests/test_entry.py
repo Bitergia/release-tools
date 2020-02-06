@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015-2019 Bitergia
+# Copyright (C) 2015-2020 Bitergia
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@ import unittest.mock
 from release_tools.entry import (CategoryChange,
                                  ChangelogEntry,
                                  read_changelog_entries,
-                                 determine_changelog_entries_dirpath,
                                  determine_filepath)
 
 
@@ -203,22 +202,6 @@ class TestReadChangelogEntries(unittest.TestCase):
         with tempfile.TemporaryDirectory() as dirpath:
             entries = read_changelog_entries(dirpath)
             self.assertDictEqual(entries, {})
-
-
-class TestDetermineChangelogEntriesDirPath(unittest.TestCase):
-    """Unit tests for determine_changelog_entries_dirpath"""
-
-    @unittest.mock.patch('release_tools.entry.GitHandler.root_path',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_dirpath(self, mock_root_path):
-        """Check if the function returns the right dirpath"""
-
-        mock_root_path.return_value = "/tmp/repo/"
-
-        expected = "/tmp/repo/releases/unreleased"
-
-        dirpath = determine_changelog_entries_dirpath()
-        self.assertEqual(dirpath, expected)
 
 
 class TestDetermineFilePath(unittest.TestCase):
