@@ -41,5 +41,6 @@ setup(name="release-tools",
           changelog=release_tools.changelog:changelog
           semverup=release_tools.semverup:semverup
           notes=release_tools.notes:notes
+          publish=release_tools.publish:publish
       """,
       zip_safe=False)
