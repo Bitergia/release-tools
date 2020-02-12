@@ -24,6 +24,11 @@ import os
 import subprocess
 
 
+class RepositoryError(Exception):
+    """Generic repository error class."""
+    pass
+
+
 class GitHandler:
     """Class to help to run Git commands."""
 
@@ -46,6 +51,26 @@ class GitHandler:
             basepath = self._get_root_path()
 
         return basepath
+
+    def add(self, filename):
+        cmd = ['git', 'add', filename]
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
+    def rm(self, filename):
+        cmd = ['git', 'rm', filename]
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
+    def tag(self, version):
+        cmd = ['git', 'tag', '-a', version, '-m', 'Release ' + version]
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
+    def commit(self, msg, author):
+        cmd = ['git', 'commit', '-m', msg, '--author', author]
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
+    def push(self, remote, ref):
+        cmd = ['git', 'push', remote, ref]
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
 
     def find_file(self, filename):
         """Find a file in the repository.
@@ -82,4 +107,10 @@ class GitHandler:
                                 stderr=subprocess.PIPE,
                                 cwd=cwd, env=env)
         (outs, errs) = proc.communicate()
+
+        if proc.returncode != 0:
+            error = errs.decode('utf-8', errors='surrogateescape')
+            msg = "{}; code error: {}".format(error.strip('\n'), proc.returncode)
+            raise RepositoryError(msg)
+
         return outs.decode('utf-8', errors='surrogateescape')

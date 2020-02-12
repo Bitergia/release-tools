@@ -38,6 +38,7 @@ import click
 from release_tools.entry import (CategoryChange,
                                  read_changelog_entries)
 from release_tools.project import Project
+from release_tools.repo import RepositoryError
 
 
 def validate_argument(ctx, param, value):
@@ -77,7 +78,10 @@ def notes(name, version, dry_run, overwrite):
 
     VERSION: version of the new release.
     """
-    project = Project(os.getcwd())
+    try:
+        project = Project(os.getcwd())
+    except RepositoryError as e:
+        raise click.ClickException(e)
 
     entry_list = read_unreleased_changelog_entries(project)
 

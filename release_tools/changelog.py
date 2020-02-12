@@ -49,6 +49,7 @@ from release_tools.entry import (CategoryChange,
                                  ChangelogEntry,
                                  determine_filepath)
 from release_tools.project import Project
+from release_tools.repo import RepositoryError
 
 
 def title_prompt():
@@ -149,7 +150,11 @@ def changelog(title, category, dry_run, overwrite, editor):
     """
     click.echo()
 
-    project = Project(os.getcwd())
+    try:
+        project = Project(os.getcwd())
+    except RepositoryError as e:
+        raise click.ClickException(e)
+
     dirpath = check_changelog_entries_dir(project)
     content = create_changelog_entry_content(title, category,
                                              run_editor=editor)
