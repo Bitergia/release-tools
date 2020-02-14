@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2015-2019 Bitergia
+# Copyright (C) 2015-2020 Bitergia
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -36,9 +36,9 @@ import textwrap
 import click
 
 from release_tools.entry import (CategoryChange,
-                                 determine_changelog_entries_dirpath,
                                  read_changelog_entries)
-from release_tools.repo import GitHandler
+from release_tools.project import Project
+from release_tools.repo import RepositoryError
 
 
 def validate_argument(ctx, param, value):
@@ -78,20 +78,25 @@ def notes(name, version, dry_run, overwrite):
 
     VERSION: version of the new release.
     """
-    entry_list = read_unreleased_changelog_entries()
+    try:
+        project = Project(os.getcwd())
+    except RepositoryError as e:
+        raise click.ClickException(e)
+
+    entry_list = read_unreleased_changelog_entries(project)
 
     md = compose_release_notes(name, version, entry_list)
 
     if dry_run:
         click.echo(md)
     else:
-        write_release_notes(version, md, overwrite=overwrite)
+        write_release_notes(project, version, md, overwrite=overwrite)
 
 
-def read_unreleased_changelog_entries():
+def read_unreleased_changelog_entries(project):
     """Import changelog entries to include in the notes."""
 
-    dirpath = determine_changelog_entries_dirpath()
+    dirpath = project.unreleased_changes_path
 
     if not os.path.exists(dirpath):
         msg = "changelog entries directory '{}' does not exist.".format(dirpath)
@@ -126,7 +131,7 @@ def compose_release_notes(title, version, entries):
     return content
 
 
-def write_release_notes(version, content, overwrite=False):
+def write_release_notes(project, version, content, overwrite=False):
     """Write the release notes text to a file."""
 
     if not content:
@@ -135,7 +140,7 @@ def write_release_notes(version, content, overwrite=False):
 
     mode = 'w' if overwrite else 'x'
 
-    filepath = determine_release_notes_filepath(version)
+    filepath = determine_release_notes_filepath(project, version)
 
     try:
         filename = os.path.basename(filepath)
@@ -152,10 +157,10 @@ def write_release_notes(version, content, overwrite=False):
     return filepath
 
 
-def determine_release_notes_filepath(version):
+def determine_release_notes_filepath(project, version):
     """Determine the file path for the release notes."""
 
-    dirpath = GitHandler().root_path
+    dirpath = project.basepath
     dirpath = os.path.join(dirpath, 'releases')
     filepath = os.path.join(dirpath, version + '.md')
 

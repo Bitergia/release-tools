@@ -55,7 +55,8 @@ INVALID_CATEGORY_INDEX_ERROR = (
 class TestChangelog(unittest.TestCase):
     """Unit tests for changelog script"""
 
-    @unittest.mock.patch('release_tools.changelog.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
     def test_entry_is_created(self, mock_dirpath):
         """Check whether a changelog entry is created"""
 
@@ -83,7 +84,8 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['pull_request'], None)
                 self.assertEqual(entry['notes'], None)
 
-    @unittest.mock.patch('release_tools.changelog.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
     def test_entry_is_not_overwritten(self, mock_dirpath):
         """Check whether an existing changelog entry is not replaced"""
 
@@ -127,7 +129,8 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['pull_request'], None)
                 self.assertEqual(entry['notes'], None)
 
-    @unittest.mock.patch('release_tools.changelog.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
     def test_overwrite_entry(self, mock_dirpath):
         """Check if it overwrites am existing changelog entry when the proper flag is set"""
 
@@ -177,7 +180,8 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['pull_request'], None)
                 self.assertEqual(entry['notes'], None)
 
-    @unittest.mock.patch('release_tools.changelog.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
     @unittest.mock.patch('release_tools.changelog.click.edit')
     def test_abort_entry_empty(self, mock_edit, mock_dirpath):
         """Check if it stops the process when the content of the entry to create is empty"""
@@ -198,7 +202,8 @@ class TestChangelog(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertEqual(lines[-2], EMPTY_CONTENT_ERROR)
 
-    @unittest.mock.patch('release_tools.changelog.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
     def test_create_entries_dir(self, mock_dirpath):
         """Check if the entries dir is created when it does not exist"""
 
@@ -219,7 +224,8 @@ class TestChangelog(unittest.TestCase):
             filepath = os.path.join(dirpath, 'new-change.yml')
             self.assertEqual(os.path.exists(filepath), True)
 
-    @unittest.mock.patch('release_tools.changelog.determine_changelog_entries_dirpath')
+    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
+                         new_callable=unittest.mock.PropertyMock)
     def test_entries_dir_not_created(self, mock_dirpath):
         """Check if it stops working when the entries dir is not created"""
 
