@@ -1,3 +1,0 @@
-click>=0.7.0
-PyYAML>=5.1.2
-semver>=2.9.0

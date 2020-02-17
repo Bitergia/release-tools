@@ -1,6 +1,6 @@
 # GrimoireLab release tools
 
-Set of tools used to generate the release of GrimoireLab.
+Set of tools to generate GrimoireLab releases.
 
 ## License
 
