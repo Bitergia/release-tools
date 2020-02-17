@@ -20,6 +20,7 @@
 #
 
 import unittest
+import unittest.mock
 
 from release_tools.project import Project
 
@@ -63,17 +64,20 @@ class TestProject(unittest.TestCase):
         expected = "/tmp/repo/releases/unreleased"
         self.assertEqual(project.unreleased_changes_path, expected)
 
+    @unittest.mock.patch('release_tools.project.GitHandler.find_file')
     @unittest.mock.patch('release_tools.project.GitHandler.root_path',
                          new_callable=unittest.mock.PropertyMock)
-    def test_pyproject_filepath(self, mock_root_path):
-        """Check if the property returns the pyproject file path"""
+    def test_pyproject_file(self, mock_root_path, mock_find_file):
+        """Check if the property returns the project toml file path"""
 
         mock_root_path.return_value = "/tmp/repo/"
+        mock_find_file.return_value = "/tmp/repo/pyproject.toml"
 
         project = Project('/tmp/repo/')
 
         expected = "/tmp/repo/pyproject.toml"
         self.assertEqual(project.pyproject_file, expected)
+        mock_find_file.assert_called_once_with('pyproject.toml')
 
     @unittest.mock.patch('release_tools.project.GitHandler.find_file')
     @unittest.mock.patch('release_tools.project.GitHandler.root_path',

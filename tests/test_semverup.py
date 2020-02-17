@@ -107,21 +107,18 @@ class TestSemVerUp(unittest.TestCase):
                                 fd.read(), re.MULTILINE).group(1)
         return version
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_version_is_updated(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_version_is_updated(self, mock_project):
         """Check whether the version is updated"""
 
         runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "0.1.0")
             self.setup_unreleased_entries(dirpath)
@@ -134,21 +131,18 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.2.0")
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_dry_run(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_dry_run(self, mock_project):
         """Check whether the version file is not updated in dry mode"""
 
         runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "0.8.10")
             self.setup_unreleased_entries(dirpath)
@@ -162,21 +156,18 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_patch_number_is_bumped(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_patch_number_is_bumped(self, mock_project):
         """Check whether the patch number is bumped when there are only fixing changes"""
 
         runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "0.8.10")
             self.setup_unreleased_entries(dirpath, only_fixed=True)
@@ -189,21 +180,18 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.11")
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_minor_number_is_bumped(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_minor_number_is_bumped(self, mock_project):
         """Check whether the patch number is bumped when there are mixed changes"""
 
         runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "0.8.10")
             self.setup_unreleased_entries(dirpath)
@@ -217,23 +205,18 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.9.0")
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_version_number_not_bumped_when_empty_changelog_dir(self,
-                                                                mock_verfile,
-                                                                mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_version_number_not_bumped_when_empty_changelog_dir(self, mock_project):
         """Check if the version does not change when no changes are available"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "0.8.10")
 
@@ -251,21 +234,18 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_changelog_dir_not_exists_error(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_changelog_dir_not_exists_error(self, mock_project):
         """Check if it returns an error when the changelog dir does not exist"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "0.8.10")
 
@@ -280,21 +260,18 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_changelog_invalid_entry_error(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_changelog_invalid_entry_error(self, mock_project):
         """Check if it returns an error when a changelog entry is invalid"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "0.8.10")
             self.setup_unreleased_entries(dirpath)
@@ -318,20 +295,17 @@ class TestSemVerUp(unittest.TestCase):
             version = self.read_version_number(version_file)
             self.assertEqual(version, "0.8.10")
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_version_file_not_found(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_version_file_not_found(self, mock_project):
         """Check whether it fails when the version file is not found"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            mock_verfile.return_value = None
+            mock_project.return_value.version_file = None
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_unreleased_entries(dirpath)
 
@@ -342,21 +316,18 @@ class TestSemVerUp(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertEqual(lines[-2], VERSION_FILE_NOT_FOUND)
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_version_file_not_exists(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_version_file_not_exists(self, mock_project):
         """Check whether it fails when the version file does not exist"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_unreleased_entries(dirpath)
 
@@ -367,21 +338,18 @@ class TestSemVerUp(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertRegex(lines[-2], VERSION_FILE_NOT_EXISTS)
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_version_not_found(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_version_not_found(self, mock_project):
         """Check whether it fails when the version string is not found in the file"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             # Write an invalid format
             with open(version_file, mode='w') as fd:
@@ -396,21 +364,18 @@ class TestSemVerUp(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertRegex(lines[-2], VERSION_NUMBER_NOT_FOUND)
 
-    @unittest.mock.patch('release_tools.project.Project.unreleased_changes_path',
-                         new_callable=unittest.mock.PropertyMock)
-    @unittest.mock.patch('release_tools.project.Project.version_file',
-                         new_callable=unittest.mock.PropertyMock)
-    def test_version_invalid_format(self, mock_verfile, mock_dirpath):
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_version_invalid_format(self, mock_project):
         """Check whether it fails when the version file has an invalid format"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
-            mock_verfile.return_value = version_file
+            mock_project.return_value.version_file = version_file
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_dirpath.return_value = dirpath
+            mock_project.return_value.unreleased_changes_path = dirpath
 
             self.setup_version_file(version_file, "invalid format")
             self.setup_unreleased_entries(dirpath)

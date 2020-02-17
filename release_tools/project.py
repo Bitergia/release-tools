@@ -48,7 +48,8 @@ class Project:
     def pyproject_file(self):
         """Path to the project metadata file."""
 
-        return os.path.join(self.basepath, PYPROJECT_FILENAME)
+        filepath = self.repo.find_file(PYPROJECT_FILENAME)
+        return filepath
 
     @property
     def version_file(self):
