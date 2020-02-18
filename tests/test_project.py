@@ -64,6 +64,18 @@ class TestProject(unittest.TestCase):
         expected = "/tmp/repo/releases/unreleased"
         self.assertEqual(project.unreleased_changes_path, expected)
 
+    @unittest.mock.patch('release_tools.project.GitHandler.root_path',
+                         new_callable=unittest.mock.PropertyMock)
+    def test_news_file(self, mock_root_path):
+        """Check if the property returns the news file path"""
+
+        mock_root_path.return_value = "/tmp/repo/"
+
+        project = Project('/tmp/repo/')
+
+        expected = "/tmp/repo/NEWS"
+        self.assertEqual(project.news_file, expected)
+
     @unittest.mock.patch('release_tools.project.GitHandler.find_file')
     @unittest.mock.patch('release_tools.project.GitHandler.root_path',
                          new_callable=unittest.mock.PropertyMock)

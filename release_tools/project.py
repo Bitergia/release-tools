@@ -24,6 +24,7 @@ import os
 from release_tools.repo import GitHandler
 
 
+NEWS_FILENAME = 'NEWS'
 PYPROJECT_FILENAME = 'pyproject.toml'
 VERSION_FILENAME = '_version.py'
 
@@ -43,6 +44,12 @@ class Project:
         """Base path of the project."""
 
         return self._basepath
+
+    @property
+    def news_file(self):
+        """Path the the news file."""
+
+        return os.path.join(self.basepath, NEWS_FILENAME)
 
     @property
     def pyproject_file(self):
