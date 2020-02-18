@@ -35,6 +35,9 @@ No changes list available.
 
 """
 
+PYPROJECT_FILE_NOT_FOUND_ERROR = (
+    r"Error: pyproject file not found"
+)
 RELEASE_NOTES_FILE_NOT_FOUND_ERROR = (
     r"Error: release notes file .+0\.8\.10\.md not found"
 )
@@ -74,6 +77,7 @@ class TestPublish(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
             notes_file = os.path.join(fs, version_number + '.md')
 
             self.setup_release_notes(fs, notes_file)
@@ -82,6 +86,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.unreleased_changes_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = pyproject_file
 
             # Run the command
             result = runner.invoke(publish.publish,
@@ -99,6 +104,7 @@ class TestPublish(unittest.TestCase):
 
             # Version file and notes where added
             mock_project.return_value.repo.add.assert_any_call(version_file)
+            mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
 
             # Commit and tag were only called once
@@ -125,6 +131,7 @@ class TestPublish(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
             notes_file = os.path.join(fs, version_number + '.md')
 
             self.setup_release_notes(fs, notes_file)
@@ -133,6 +140,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.unreleased_changes_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = pyproject_file
 
             # Run the command
             result = runner.invoke(publish.publish,
@@ -151,6 +159,7 @@ class TestPublish(unittest.TestCase):
 
             # Version file and notes where added
             mock_project.return_value.repo.add.assert_any_call(version_file)
+            mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
 
             # Commit and tag were only called once
@@ -176,10 +185,13 @@ class TestPublish(unittest.TestCase):
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
+
             mock_read_changelog.return_value = files
             mock_project.return_value.unreleased_changes_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = None
+            mock_project.return_value.pyproject_file = pyproject_file
 
             # Run the command
             result = runner.invoke(publish.publish,
@@ -200,8 +212,8 @@ class TestPublish(unittest.TestCase):
 
     @unittest.mock.patch('release_tools.publish.read_changelog_entries')
     @unittest.mock.patch('release_tools.publish.Project')
-    def test_no_notes_file_error(self, mock_project, mock_read_changelog):
-        """Test if it fails when the notes file does not exist."""
+    def test_no_pyproject_file_error(self, mock_project, mock_read_changelog):
+        """Test if it fails when the pyproject file does not exist."""
 
         files = {
             'file1': 'content',
@@ -218,6 +230,47 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.unreleased_changes_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = None
+
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], PYPROJECT_FILE_NOT_FOUND_ERROR)
+
+            # Check called mock calls
+            mock_project.return_value.repo.rm.assert_called()
+            mock_project.return_value.repo.add.assert_called_once_with(version_file)
+
+            # Check non called mock calls not called
+            mock_project.return_value.repo.commit.assert_not_called()
+            mock_project.return_value.repo.tag.assert_not_called()
+            mock_project.return_value.repo.push.assert_not_called()
+
+    @unittest.mock.patch('release_tools.publish.read_changelog_entries')
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_no_notes_file_error(self, mock_project, mock_read_changelog):
+        """Test if it fails when the notes file does not exist."""
+
+        files = {
+            'file1': 'content',
+            'file2': 'content',
+            'file3': 'content'
+        }
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
+
+            mock_read_changelog.return_value = files
+            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.releases_path = fs
+            mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = pyproject_file
 
             # Run the command
             result = runner.invoke(publish.publish,
@@ -229,7 +282,8 @@ class TestPublish(unittest.TestCase):
 
             # Check called mock calls
             mock_project.return_value.repo.rm.assert_called()
-            mock_project.return_value.repo.add.assert_called_once_with(version_file)
+            mock_project.return_value.repo.add.assert_any_call(version_file)
+            mock_project.return_value.repo.add.assert_any_call(pyproject_file)
 
             # Check non called mock calls not called
             mock_project.return_value.repo.commit.assert_not_called()
@@ -252,6 +306,7 @@ class TestPublish(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
             notes_file = os.path.join(fs, version_number + '.md')
 
             self.setup_release_notes(fs, notes_file)
@@ -260,6 +315,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.unreleased_changes_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = pyproject_file
 
             mock_project.return_value.repo.commit.side_effect = RepositoryError("generated mock error")
 
@@ -283,6 +339,7 @@ class TestPublish(unittest.TestCase):
 
             # Version file and notes where added
             mock_project.return_value.repo.add.assert_any_call(version_file)
+            mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
 
             # The process failed when commit command was called
