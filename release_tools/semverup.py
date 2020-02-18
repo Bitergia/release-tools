@@ -33,6 +33,7 @@ import re
 
 import click
 import semver
+import tomlkit.toml_file
 
 from release_tools.entry import (CategoryChange,
                                  read_changelog_entries)
@@ -62,6 +63,9 @@ def semverup(dry_run):
     properly, the script will get the type of every unreleased change
     stored under 'releases/unreleased' directory.
 
+    Additionally, 'pyproject' file will also be updated. Take into
+    account this file must be tracked by the repository.
+
     WARNING: this script does not increases MAJOR version yet.
 
     If you don't want to create a new version and see only the final
@@ -76,14 +80,19 @@ def semverup(dry_run):
         raise click.ClickException(e)
 
     # Get the current version number
-    filepath = find_version_file(project)
-    current_version = read_version_number(filepath)
+    version_file = find_version_file(project)
+    current_version = read_version_number(version_file)
+
+    # Get the pyproject file
+    pyproject_file = find_pyproject_file(project)
 
     # Determine the new version and produce the output
     new_version = determine_new_version_number(project, current_version)
 
     if not dry_run:
-        write_version_number(filepath, new_version)
+        write_version_number(version_file, new_version)
+        write_version_number_pyproject(pyproject_file,
+                                       new_version)
 
     click.echo(new_version)
 
@@ -98,6 +107,20 @@ def find_version_file(project):
 
     if not filepath:
         raise click.ClickException("version file not found")
+
+    return filepath
+
+
+def find_pyproject_file(project):
+    """Find the pyproject file in the repository."""
+
+    try:
+        filepath = project.pyproject_file
+    except RepositoryError as e:
+        raise click.ClickException(e)
+
+    if not filepath:
+        raise click.ClickException("pyproject file not found")
 
     return filepath
 
@@ -183,6 +206,17 @@ def write_version_number(filepath, version):
 
     with open(filepath, mode='w') as fd:
         fd.write(stream)
+
+
+def write_version_number_pyproject(filepath, version):
+    """Write version number into the pyproject file."""
+
+    fd = tomlkit.toml_file.TOMLFile(filepath)
+
+    metadata = fd.read()
+    poetry_metadata = metadata["tool"]["poetry"]
+    poetry_metadata["version"] = str(version)
+    fd.write(metadata)
 
 
 if __name__ == '__main__':
