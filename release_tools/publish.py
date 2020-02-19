@@ -41,7 +41,9 @@ from release_tools.repo import RepositoryError
 @click.argument('version')
 @click.argument('author')
 @click.option('--push', 'remote', help="Push release to the given remote.")
-def publish(version, author, remote):
+@click.option('--only-push', is_flag=True,
+              help="Do not generate a release commit; push the existing one.")
+def publish(version, author, remote, only_push):
     """Publish a new release.
 
     This script will generate a new release in the repository.
@@ -55,19 +57,27 @@ def publish(version, author, remote):
     remote repository. To force it, use the parameter `--push`
     including the name of the remote where commits will be pushed.
 
+    It is also possible to push only the commit release and its tag.
+    To do so, set '--only-push' together with '--push' option.
+
     VERSION: version of the new release.
 
     AUTHOR: author of the new release (e.g. John Smith <jsmith@example.com>)
     """
+    if only_push and not remote:
+        msg = "'--only-push' flag must be set together with '--push'"
+        raise click.ClickException(msg)
+
     try:
         project = Project(os.getcwd())
     except RepositoryError as e:
         raise click.ClickException(e)
 
     try:
-        remove_unreleased_changelog_entries(project)
-        add_release_files(project, version)
-        commit(project, version, author)
+        if not only_push:
+            remove_unreleased_changelog_entries(project)
+            add_release_files(project, version)
+            commit(project, version, author)
 
         if remote:
             push(project, remote, version)

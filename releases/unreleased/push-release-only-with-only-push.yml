@@ -1,0 +1,18 @@
+---
+title: Push release only with `publish`
+category: added
+author: Santiago Dueñas <sduenas@bitergia.com>
+pull_request: null
+notes: >
+  The command `publish` generates the commit and tag
+  release but by default it does not push them to a
+  remote repository. The idea behind this is to review
+  the changes before pushing them. After the review,
+  to upload the new changes, it will necessary to call
+  directly to `git push` because `publish` will try to
+  create the same release data again.
+
+  To fix this problem a the new flag `--only-push` is
+  available. When it is called together with `--push`,
+  the command will ignore the creation of the release
+  pushing to the origin the latest changes.
