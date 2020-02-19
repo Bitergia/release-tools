@@ -104,6 +104,14 @@ def add_release_files(project, version):
 
     project.repo.add(version_file)
 
+    # Add pyproject.toml file
+    pyproject_file = project.pyproject_file
+
+    if not pyproject_file:
+        raise click.ClickException("pyproject file not found")
+
+    project.repo.add(pyproject_file)
+
     # Add release notes file
     notes_file = os.path.join(project.releases_path, version + '.md')
 

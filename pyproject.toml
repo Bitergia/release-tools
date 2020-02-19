@@ -43,6 +43,7 @@ python = "^3.6"
 click = "^7.0"
 PyYAML = "^5.1.2"
 semver = "^2.9"
+tomlkit = "^0.5.8"
 
 [tool.poetry.dev-dependencies]
 
