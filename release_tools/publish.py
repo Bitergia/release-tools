@@ -121,6 +121,15 @@ def add_release_files(project, version):
 
     project.repo.add(notes_file)
 
+    # Add NEWS file
+    news_file = project.news_file
+
+    if not os.path.exists(news_file):
+        msg = "news file not found"
+        raise click.ClickException(msg)
+
+    project.repo.add(news_file)
+
     click.echo("done")
 
 

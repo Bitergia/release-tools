@@ -56,9 +56,11 @@ def validate_argument(ctx, param, value):
               help="Do not write release notes file. Print to the standard output instead.")
 @click.option('--overwrite', is_flag=True,
               help="Force to replace an existing release notes entry.")
+@click.option('--news', is_flag=True,
+              help="Update NEWS file with the release notes.")
 @click.argument('name', callback=validate_argument)
 @click.argument('version', callback=validate_argument)
-def notes(name, version, dry_run, overwrite):
+def notes(name, version, dry_run, overwrite, news):
     """Generate release notes.
 
     When you run this script, it will generate the release notes of the
@@ -68,6 +70,9 @@ def notes(name, version, dry_run, overwrite):
     of the new release. The script will generate a Markdown document
     under the 'releases' directory. Take into account the argument `NAME`
     is only used as the title of the document.
+
+    If you also want to add the content of these release notes to the NEWS
+    file, use the flag `--news`.
 
     In the case a release notes file for the same version already exists,
     an error will be raised. Use '--overwrite' to force to replace the
@@ -90,7 +95,8 @@ def notes(name, version, dry_run, overwrite):
     if dry_run:
         click.echo(md)
     else:
-        write_release_notes(project, version, md, overwrite=overwrite)
+        write_release_notes(project, version, md,
+                            overwrite=overwrite, news=news)
 
 
 def read_unreleased_changelog_entries(project):
@@ -131,7 +137,17 @@ def compose_release_notes(title, version, entries):
     return content
 
 
-def write_release_notes(project, version, content, overwrite=False):
+def write_release_notes(project, version, content,
+                        overwrite=False, news=False):
+    """Write the release notes."""
+
+    write_release_notes_file(project, version, content, overwrite)
+
+    if news:
+        update_news_file(project, version, content)
+
+
+def write_release_notes_file(project, version, content, overwrite):
     """Write the release notes text to a file."""
 
     if not content:
@@ -155,6 +171,33 @@ def write_release_notes(project, version, content, overwrite=False):
         click.echo("Release notes file '{}' created".format(filename))
 
     return filepath
+
+
+def update_news_file(project, version, content):
+    """Update the news file with content of the release notes."""
+
+    news_file = project.news_file
+
+    # Read old content
+    try:
+        # Skip the title line and read the content
+        with open(news_file, 'r') as fd:
+            fd.readline()
+            original_content = fd.read()
+    except FileNotFoundError:
+        original_content = ''
+
+    content = content.strip('\n')
+    original_content = original_content.strip('\n')
+
+    with open(news_file, 'w') as fd:
+        fd.write("# Releases\n\n")
+        fd.write("{}\n\n".format(content))
+
+        if original_content:
+            fd.write("\n{}\n\n".format(original_content))
+
+    click.echo("News file updated to {}".format(version))
 
 
 def determine_release_notes_filepath(project, version):

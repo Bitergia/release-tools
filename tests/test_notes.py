@@ -63,6 +63,14 @@ RELEASE_NOTES_EMPTY = """## release-tools 0.8.10 - (2019-01-01)
 No changes list available.
 
 """
+NEWS_FILE_ORIGINAL_CONTENT = """# Releases
+
+## release-tools 0.1 - (1900-01-01)
+
+Initial release
+"""
+NEWS_FILE_CONTENT = """# Releases\n\n""" + RELEASE_NOTES_CONTENT + NEWS_FILE_ORIGINAL_CONTENT[11:] + "\n"
+
 RELEASE_NOTES_FILE_ALREADY_EXISTS_ERROR = (
     "Error: Release notes for version 0.8.10 already exist. Use '--overwrite' to replace it."
 )
@@ -131,10 +139,17 @@ class TestNotes(unittest.TestCase):
                                  prs[x], ntxt)
                 fd.write(msg)
 
+    @staticmethod
+    def setup_news_file(filepath):
+        """Set up a news file"""
+
+        with open(filepath, mode='w') as fd:
+            fd.write(NEWS_FILE_ORIGINAL_CONTENT)
+
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
     def test_release_notes(self, mock_project, mock_utcnow):
-        """Check it it generates a release notes file"""
+        """Check if it generates a release notes file"""
 
         mock_utcnow.return_value = "2019-01-01"
 
@@ -142,7 +157,9 @@ class TestNotes(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
+            news_file = os.path.join(fs, 'NEWS')
             self.setup_unreleased_entries(changes_path)
+            self.setup_news_file(news_file)
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
@@ -157,10 +174,15 @@ class TestNotes(unittest.TestCase):
 
             self.assertEqual(text, RELEASE_NOTES_CONTENT)
 
+            with open(news_file, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, NEWS_FILE_ORIGINAL_CONTENT)
+
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
     def test_dry_run(self, mock_project, mock_utcnow):
-        """Check it it composes the release notes but does not create a file"""
+        """Check if it composes the release notes but does not create a file"""
 
         mock_utcnow.return_value = "2019-01-01"
 
@@ -184,8 +206,76 @@ class TestNotes(unittest.TestCase):
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
+    def test_news_update(self, mock_project, mock_utcnow):
+        """Check it it updates the news file when the flag is set"""
+
+        mock_utcnow.return_value = "2019-01-01"
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            news_file = os.path.join(fs, 'NEWS')
+            self.setup_unreleased_entries(changes_path)
+            self.setup_news_file(news_file)
+
+            mock_project.return_value.basepath = fs
+            mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.news_file = news_file
+
+            # Run the script command
+            result = runner.invoke(notes, ['--news', 'release-tools', '0.8.10'])
+            self.assertEqual(result.exit_code, 0)
+
+            filepath = os.path.join(fs, 'releases', '0.8.10.md')
+            with open(filepath, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, RELEASE_NOTES_CONTENT)
+
+            with open(news_file, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, NEWS_FILE_CONTENT)
+
+    @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
+    @unittest.mock.patch('release_tools.notes.Project')
+    def test_news_empty_file(self, mock_project, mock_utcnow):
+        """Check if it creates a news file when it does not exist"""
+
+        mock_utcnow.return_value = "2019-01-01"
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            news_file = os.path.join(fs, 'NEWS')
+            self.setup_unreleased_entries(changes_path)
+
+            mock_project.return_value.basepath = fs
+            mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.news_file = news_file
+
+            # Run the script command
+            result = runner.invoke(notes, ['--news', 'release-tools', '0.8.10'])
+            self.assertEqual(result.exit_code, 0)
+
+            filepath = os.path.join(fs, 'releases', '0.8.10.md')
+            with open(filepath, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, RELEASE_NOTES_CONTENT)
+
+            with open(news_file, 'r') as fd:
+                text = fd.read()
+
+            expected = "# Releases\n\n" + RELEASE_NOTES_CONTENT
+            self.assertEqual(text, expected)
+
+    @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
+    @unittest.mock.patch('release_tools.notes.Project')
     def test_release_notes_no_entry_files(self, mock_project, mock_utcnow):
-        """Check it it generates a release notes file when there are not entry files"""
+        """Check if it generates a release notes file when there are not entry files"""
 
         mock_utcnow.return_value = "2019-01-01"
 
