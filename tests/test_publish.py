@@ -34,7 +34,9 @@ RELEASE_NOTES_CONTENT = """## release-tools 0.8.10 - (2019-01-01)
 No changes list available.
 
 """
-
+ONLY_PUSH_ERROR = (
+    r"Error: '--only-push' flag must be set together with '--push'"
+)
 PYPROJECT_FILE_NOT_FOUND_ERROR = (
     r"Error: pyproject file not found"
 )
@@ -180,9 +182,55 @@ class TestPublish(unittest.TestCase):
                                                                           "John Smith <jsmith@example.org>")
             mock_project.return_value.repo.tag.assert_called_once_with('0.8.10')
 
-            # Pushed the commit and the tag
+            # Commit and the tag where pushed
             mock_project.return_value.repo.push.assert_any_call('myremote', 'master')
             mock_project.return_value.repo.push.assert_any_call('myremote', '0.8.10')
+
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_only_publish_to_remote(self, mock_project):
+        """Test if when '--only-push' is set only tries to push the release commits and tags."""
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["--push", "myremote", "--only-push",
+                                    "0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 0)
+
+            # No other commands than 'push' were called
+            mock_project.return_value.repo.add.assert_not_called()
+            mock_project.return_value.repo.rm.assert_not_called()
+            mock_project.return_value.repo.commit.assert_not_called()
+            mock_project.return_value.repo.tag.assert_not_called()
+
+            # Commit and the tag were pushed
+            mock_project.return_value.repo.push.assert_any_call('myremote', 'master')
+            mock_project.return_value.repo.push.assert_any_call('myremote', '0.8.10')
+
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_only_publish_no_push_error(self, mock_project):
+        """Test if fails when '--only-push' is set but not remote is set."""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["--only-push",
+                                    "0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], ONLY_PUSH_ERROR)
+
+            # No commands were called
+            mock_project.return_value.repo.add.assert_not_called()
+            mock_project.return_value.repo.rm.assert_not_called()
+            mock_project.return_value.repo.commit.assert_not_called()
+            mock_project.return_value.repo.tag.assert_not_called()
+            mock_project.return_value.repo.push.assert_not_called()
 
     @unittest.mock.patch('release_tools.publish.read_changelog_entries')
     @unittest.mock.patch('release_tools.publish.Project')
