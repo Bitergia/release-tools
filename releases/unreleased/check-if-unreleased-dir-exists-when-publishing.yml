@@ -1,0 +1,10 @@
+---
+title: Check if unreleased dir exists when publishing
+category: fixed
+author: Santiago Dueñas <sduenas@bitergia.com>
+issue: 5
+notes: >
+  An exception was raised when `publish` command was called
+  and `unreleased` directory did not exist. Now, instead of
+  raising an exception, `publish` command fails and displays
+  a message with the error.

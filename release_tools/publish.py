@@ -92,6 +92,10 @@ def remove_unreleased_changelog_entries(project):
 
     dirpath = project.unreleased_changes_path
 
+    if not os.path.exists(dirpath):
+        msg = "changelog entries directory '{}' does not exist.".format(dirpath)
+        raise click.ClickException(msg)
+
     entries = read_changelog_entries(dirpath).keys()
 
     for filename in entries:
