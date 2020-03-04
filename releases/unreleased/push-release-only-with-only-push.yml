@@ -2,7 +2,7 @@
 title: Push release only with `publish`
 category: added
 author: Santiago Dueñas <sduenas@bitergia.com>
-pull_request: null
+issue: null
 notes: >
   The command `publish` generates the commit and tag
   release but by default it does not push them to a
