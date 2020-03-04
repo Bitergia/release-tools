@@ -113,7 +113,7 @@ class TestNotes(unittest.TestCase):
             CategoryChange.FIXED,
         ]
         authors = ['jsmith', 'jdoe', 'jsmith', 'jdoe', 'jsmith']
-        prs = [1, 2, 3, 'null', 'null']
+        issues = [1, 2, 3, 'null', 'null']
         notes = [True, False, False, False, True]
         notes_txt = (
             ">\n"
@@ -133,10 +133,10 @@ class TestNotes(unittest.TestCase):
 
             with open(filepath, mode='w') as fd:
                 msg = "---\ntitle: {}\ncategory: {}\n"
-                msg += "author: {}\npull_request: {}\nnotes: {}\n"
+                msg += "author: {}\nissue: {}\nnotes: {}\n"
                 ntxt = notes_txt if notes[x] else "null"
                 msg = msg.format(titles[x], categories[x].category, authors[x],
-                                 prs[x], ntxt)
+                                 issues[x], ntxt)
                 fd.write(msg)
 
     @staticmethod

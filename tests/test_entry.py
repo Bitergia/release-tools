@@ -82,15 +82,15 @@ class TestChangelogEntry(unittest.TestCase):
         self.assertEqual(entry.title, 'new entry')
         self.assertEqual(entry.category, CategoryChange.FIXED)
         self.assertEqual(entry.author, 'jdoe')
-        self.assertEqual(entry.pr, None)
+        self.assertEqual(entry.issue, None)
         self.assertEqual(entry.notes, None)
 
         entry = ChangelogEntry('last entry', 'added', 'jsmith',
-                               pr='42', notes="some notes go here")
+                               issue='42', notes="some notes go here")
         self.assertEqual(entry.title, 'last entry')
         self.assertEqual(entry.category, CategoryChange.ADDED)
         self.assertEqual(entry.author, 'jsmith')
-        self.assertEqual(entry.pr, '42')
+        self.assertEqual(entry.issue, '42')
         self.assertEqual(entry.notes, 'some notes go here')
 
     def test_to_dict(self):
@@ -100,12 +100,12 @@ class TestChangelogEntry(unittest.TestCase):
             'title': 'last entry',
             'category': 'added',
             'author': 'jsmith',
-            'pull_request': '42',
+            'issue': '42',
             'notes': 'some notes go here'
         }
 
         entry = ChangelogEntry('last entry', 'added', 'jsmith',
-                               pr='42', notes="some notes go here")
+                               issue='42', notes="some notes go here")
         self.assertDictEqual(entry.to_dict(), expected)
 
     def test_import_from_yaml_file(self):
@@ -113,14 +113,14 @@ class TestChangelogEntry(unittest.TestCase):
 
         with tempfile.NamedTemporaryFile() as f:
             f.write(b"---\ntitle: last entry\ncategory: added\n")
-            f.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
+            f.write(b"author: jsmith\nissue: '42'\nnotes: 'some notes go here'\n")
             f.seek(0)
 
             expected = {
                 'title': 'last entry',
                 'category': 'added',
                 'author': 'jsmith',
-                'pull_request': '42',
+                'issue': '42',
                 'notes': 'some notes go here'
             }
 
@@ -133,7 +133,7 @@ class TestChangelogEntry(unittest.TestCase):
         with tempfile.NamedTemporaryFile() as f:
             # The tittle is missing on this file
             f.write(b"---category: added\n")
-            f.write(b"author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n")
+            f.write(b"author: jsmith\nissue: '42'\nnotes: 'some notes go here'\n")
             f.seek(0)
 
             with self.assertRaisesRegex(Exception, "'title' attribute not found"):
@@ -161,7 +161,7 @@ class TestReadChangelogEntries(unittest.TestCase):
 
                 with open(filepath, mode='w') as f:
                     msg = "---\ntitle: {}\ncategory: {}\n"
-                    msg += "author: {}\npull_request: '{}'\nnotes: null\n"
+                    msg += "author: {}\nissue: '{}'\nnotes: null\n"
                     msg = msg.format(titles[x], categories[x].category, authors[x], x)
                     f.write(msg)
 
@@ -179,21 +179,21 @@ class TestReadChangelogEntries(unittest.TestCase):
             self.assertEqual(entry.title, 'first change')
             self.assertEqual(entry.category, CategoryChange.ADDED)
             self.assertEqual(entry.author, 'jsmith')
-            self.assertEqual(entry.pr, '0')
+            self.assertEqual(entry.issue, '0')
             self.assertEqual(entry.notes, None)
 
             entry = entries['1.yml']
             self.assertEqual(entry.title, 'next change')
             self.assertEqual(entry.category, CategoryChange.FIXED)
             self.assertEqual(entry.author, 'jdoe')
-            self.assertEqual(entry.pr, '1')
+            self.assertEqual(entry.issue, '1')
             self.assertEqual(entry.notes, None)
 
             entry = entries['2.yml']
             self.assertEqual(entry.title, 'last change')
             self.assertEqual(entry.category, CategoryChange.DEPRECATED)
             self.assertEqual(entry.author, 'jsmith')
-            self.assertEqual(entry.pr, '2')
+            self.assertEqual(entry.issue, '2')
             self.assertEqual(entry.notes, None)
 
     def test_read_entries_empty_dir(self):

@@ -112,7 +112,7 @@ class TestSemVerUp(unittest.TestCase):
 
             with open(filepath, mode='w') as fd:
                 msg = "---\ntitle: {}\ncategory: {}\n"
-                msg += "author: {}\npull_request: '{}'\nnotes: null\n"
+                msg += "author: {}\nissue: '{}'\nnotes: null\n"
                 msg = msg.format(titles[x], categories[x].category, authors[x], x)
                 fd.write(msg)
 
@@ -356,7 +356,7 @@ class TestSemVerUp(unittest.TestCase):
 
             with open(entry_fp, mode='w') as fd:
                 msg = "---category: added\n"
-                msg += "author: jsmith\npull_request: '42'\nnotes: 'some notes go here'\n"
+                msg += "author: jsmith\nissue: '42'\nnotes: 'some notes go here'\n"
                 fd.write(msg)
 
             # Run the script command

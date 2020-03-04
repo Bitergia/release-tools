@@ -1,0 +1,17 @@
+---
+title: Replace pull request field for issue in changelog entries
+category: changed
+author: Santiago Dueñas <sduenas@bitergia.com>
+issue: 10
+notes: >
+  The initial idea of the pull request field in a changelog
+  entry was to know which PR introduced the change. The problem
+  is the reference is unknown until the PR is generated, so
+  developers will need to modify the entry and the PR later
+  to include the reference. Therefore, we considered it is
+  better to include a reference to an issue which is more
+  generic and can be known in advance.
+  
+  Take into account you will need to update your unreleased
+  changelog entries if you want to use this new version of
+  the tools.
