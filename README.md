@@ -159,7 +159,7 @@ defined in your system.
 title: 'Fix bug #666'
 category: fixed
 author: John Smith <jsmith@example.com>
-pull_request: null
+issue: 666
 notes: >
   The bug was making impossible to cast a spell on
   a magician.
@@ -299,7 +299,7 @@ of each block. See the next example:
 title: 'Example of notes'
 category: fixed
 author: John Smith <jsmith@example.com>
-pull_request: null
+issue: 1
 notes: >
   Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
   tempor incididunt ut labore et dolore magna aliqua.
