@@ -37,6 +37,9 @@ No changes list available.
 ONLY_PUSH_ERROR = (
     r"Error: '--only-push' flag must be set together with '--push'"
 )
+CHANGELOG_DIR_NOT_FOUND_ERROR = (
+    r"Error: changelog entries directory '.+' does not exist"
+)
 PYPROJECT_FILE_NOT_FOUND_ERROR = (
     r"Error: pyproject file not found"
 )
@@ -226,6 +229,31 @@ class TestPublish(unittest.TestCase):
             self.assertRegex(lines[-2], ONLY_PUSH_ERROR)
 
             # No commands were called
+            mock_project.return_value.repo.add.assert_not_called()
+            mock_project.return_value.repo.rm.assert_not_called()
+            mock_project.return_value.repo.commit.assert_not_called()
+            mock_project.return_value.repo.tag.assert_not_called()
+            mock_project.return_value.repo.push.assert_not_called()
+
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_unreleased_dir_not_found_error(self, mock_project):
+        """Test if it fails when the unreleased dir is not found."""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            dirpath =  os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], CHANGELOG_DIR_NOT_FOUND_ERROR)
+
+            # Check non called mock calls not called
             mock_project.return_value.repo.add.assert_not_called()
             mock_project.return_value.repo.rm.assert_not_called()
             mock_project.return_value.repo.commit.assert_not_called()
