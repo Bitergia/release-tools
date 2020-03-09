@@ -193,11 +193,11 @@ def check_changelog_entries_dir(project):
     return dirpath
 
 
-def create_changelog_entry_content(title, category, author=None, pr=None,
+def create_changelog_entry_content(title, category, author=None, issue=None,
                                    run_editor=True):
     """Generates the content of a changelog entry."""
 
-    entry = ChangelogEntry(title, category, author=author, pr=pr)
+    entry = ChangelogEntry(title, category, author=author, issue=issue)
     contents = entry.to_dict()
     stream = yaml.dump(contents, sort_keys=False,
                        explicit_start=True)

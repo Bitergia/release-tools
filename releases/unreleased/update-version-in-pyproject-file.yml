@@ -2,7 +2,7 @@
 title: Automate version updates in pyproject file
 category: added
 author: Santiago Dueñas <sduenas@bitergia.com>
-pull_request: null
+issue: null
 notes: >
  Besides the file `_version.py`, there is another file
  that stores the version number of the package. This file is

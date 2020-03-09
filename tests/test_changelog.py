@@ -80,7 +80,7 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['title'], 'new change')
                 self.assertEqual(entry['category'], 'added')
                 self.assertEqual(entry['author'], None)
-                self.assertEqual(entry['pull_request'], None)
+                self.assertEqual(entry['issue'], None)
                 self.assertEqual(entry['notes'], None)
 
     @unittest.mock.patch('release_tools.changelog.Project')
@@ -124,7 +124,7 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['title'], 'new change')
                 self.assertEqual(entry['category'], 'fixed')
                 self.assertEqual(entry['author'], None)
-                self.assertEqual(entry['pull_request'], None)
+                self.assertEqual(entry['issue'], None)
                 self.assertEqual(entry['notes'], None)
 
     @unittest.mock.patch('release_tools.changelog.Project')
@@ -156,7 +156,7 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['title'], 'new change')
                 self.assertEqual(entry['category'], 'fixed')
                 self.assertEqual(entry['author'], None)
-                self.assertEqual(entry['pull_request'], None)
+                self.assertEqual(entry['issue'], None)
                 self.assertEqual(entry['notes'], None)
 
             # Try to replace it
@@ -174,7 +174,7 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['title'], 'new change')
                 self.assertEqual(entry['category'], 'added')
                 self.assertEqual(entry['author'], None)
-                self.assertEqual(entry['pull_request'], None)
+                self.assertEqual(entry['issue'], None)
                 self.assertEqual(entry['notes'], None)
 
     @unittest.mock.patch('release_tools.changelog.Project')

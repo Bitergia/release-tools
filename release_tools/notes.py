@@ -215,7 +215,7 @@ class ReleaseNotesComposer:
 
     HEADLINE_TEMPLATE = "## {title} {version} - ({date})\n\n"
     CATEGORY_TITLE_TEMPLATE = "**{title}:**\n\n"
-    ENTRY_DESC_PR_TEMPLATE = " * {desc} (#{pr})"
+    ENTRY_DESC_PR_TEMPLATE = " * {desc} (#{issue})"
     ENTRY_DESC_NO_PR_TEMPLATE = " * {desc}"
     NOTES_INDENT = "   "
     EMPTY_NOTES_TEMPLATE = "No changes list available.\n"
@@ -278,9 +278,9 @@ class ReleaseNotesComposer:
     def _compose_entry(self, entry):
         """Generate the changelog entry text."""
 
-        if entry.pr:
+        if entry.issue:
             content = self.ENTRY_DESC_PR_TEMPLATE.format(desc=entry.title,
-                                                         pr=entry.pr)
+                                                         issue=entry.issue)
         else:
             content = self.ENTRY_DESC_NO_PR_TEMPLATE.format(desc=entry.title)
 
@@ -301,10 +301,10 @@ class ReleaseNotesComposer:
 
     @staticmethod
     def _sort_entries_by_id(entries):
-        """Order entries by PR identifier."""
+        """Order entries by issue identifier."""
 
-        # Entries with empty PR will be pushed to the end of the list
-        return sorted(entries, key=lambda e: int(e.pr) if e.pr else sys.maxsize)
+        # Entries with empty issue will be pushed to the end of the list
+        return sorted(entries, key=lambda e: int(e.issue) if e.issue else sys.maxsize)
 
 
 if __name__ == "__main__":

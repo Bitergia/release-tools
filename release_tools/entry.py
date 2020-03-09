@@ -68,12 +68,12 @@ class CategoryChange(enum.Enum):
 class ChangelogEntry:
     """Class to store changelog entries data."""
 
-    def __init__(self, title, category, author, pr=None, notes=None):
+    def __init__(self, title, category, author, issue=None, notes=None):
         self._category = None
         self.title = title
         self.category = category
         self.author = author
-        self.pr = pr
+        self.issue = issue
         self.notes = notes
 
     @property
@@ -89,7 +89,7 @@ class ChangelogEntry:
             'title': self.title,
             'category': self.category.category,
             'author': self.author,
-            'pull_request': self.pr,
+            'issue': self.issue,
             'notes': self.notes
         }
 
@@ -104,7 +104,7 @@ class ChangelogEntry:
             entry = cls(data['title'],
                         data['category'],
                         data['author'],
-                        pr=data['pull_request'],
+                        issue=data['issue'],
                         notes=data['notes'])
         except KeyError as exc:
             msg = "invalid format for {}; '{}' attribute not found".format(filepath,

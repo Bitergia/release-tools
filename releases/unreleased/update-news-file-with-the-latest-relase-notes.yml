@@ -2,7 +2,7 @@
 title: Update NEWS file with the latest relase notes
 category: added
 author: Santiago Dueñas <sduenas@bitergia.com>
-pull_request: null
+issue: null
 notes: >
   The command `notes` incorporates the new option `--news`.
   This flag allows to add the contents of the notes generated
