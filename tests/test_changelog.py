@@ -242,6 +242,63 @@ class TestChangelog(unittest.TestCase):
             # Nothing was created in the directory
             self.assertEqual(len(os.listdir(fs)), 0)
 
+    def test_validate_content(self):
+        """Check if the content of the entry file is valid."""
+
+        good_entry = "---\ntitle: new change\ncategory: fixed\n"
+        good_entry += "author: john\nissue: 2\nnotes: null\n"
+
+        result = changelog.validate_changelog_content(content=good_entry)
+        self.assertEqual(result, True)
+
+        bad_entry = "---\ntitle: new change\ncategory: fixed\n"
+        bad_entry += "author: :\nissue: 2\nnotes: null\n"
+
+        result = changelog.validate_changelog_content(content=bad_entry)
+        self.assertEqual(result, False)
+
+    @unittest.mock.patch('release_tools.changelog.Project')
+    @unittest.mock.patch('release_tools.changelog.validate_changelog_content')
+    def test_validate_good_entry(self, mock_content, mock_project):
+        """Check if it creates the file if the content is invalid."""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+        user_input = "new change\n1\ny"
+
+        with runner.isolated_filesystem() as fs:
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+            mock_content.return_value = True
+
+            result = runner.invoke(changelog.changelog, ['--no-editor'],
+                                   input=user_input)
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(os.path.exists(dirpath), True)
+
+            filepath = os.path.join(dirpath, 'new-change.yml')
+            self.assertEqual(os.path.exists(filepath), True)
+
+    @unittest.mock.patch('release_tools.changelog.Project')
+    @unittest.mock.patch('release_tools.changelog.validate_changelog_content')
+    def test_validate_bad_entry(self, mock_content, mock_project):
+        """Check if it doesn't create the file if the content is invalid."""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+        user_input = "new change\n1\ny"
+
+        with runner.isolated_filesystem() as fs:
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+            mock_content.return_value = False
+
+            result = runner.invoke(changelog.changelog, ['--no-editor'],
+                                   input=user_input)
+            self.assertEqual(result.exit_code, 1)
+            self.assertEqual(os.path.exists(dirpath), True)
+
+            filepath = os.path.join(dirpath, 'new-change.yml')
+            self.assertEqual(os.path.exists(filepath), False)
+
     def test_invalid_title(self):
         """Check whether title param is validated correctly"""
 

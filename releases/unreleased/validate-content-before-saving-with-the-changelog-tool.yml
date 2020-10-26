@@ -1,0 +1,14 @@
+---
+title: Validate content before saving with the changelog tool
+category: added
+author: Venu Vardhan Reddy Tekula <venu@bitergia.com>
+issue: 17
+notes: >
+    When the editor opens with changelog, the user can make
+    mistakes and produce an invalid entry file. This would
+    break the workflow and produce error while doing semverup.
+
+    This feature validates the format of the yml file and gives
+    info about the errors, if any. This gives an option to edit the
+    file incase it if has any mistakes, so you need not create a
+    new entry.

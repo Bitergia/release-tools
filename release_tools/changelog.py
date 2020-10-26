@@ -158,6 +158,7 @@ def changelog(title, category, dry_run, overwrite, editor):
     dirpath = check_changelog_entries_dir(project)
     content = create_changelog_entry_content(title, category,
                                              run_editor=editor)
+    content = validate_changelog_entry(content)
 
     click.echo()
 
@@ -211,12 +212,40 @@ def create_changelog_entry_content(title, category, author=None, issue=None,
     return content
 
 
-def write_changelog_entry(dirpath, title, content, overwrite=False):
-    """Store the contents of an entry in a file."""
+def validate_changelog_content(content):
+    """Validate the contents of an entry in a file."""
 
     if not content:
         msg = "Aborting due to empty entry content"
         raise click.ClickException(msg)
+
+    try:
+        data = yaml.safe_load(content)
+        return True
+    except yaml.YAMLError as exc:
+        pm = exc.problem_mark
+        click.echo("Error: Invalid format on line {} at position {}".format(pm.line, pm.column))
+        return False
+
+
+def validate_changelog_entry(content):
+    """Checks if the file has a valid format."""
+
+    is_valid = False
+    while not is_valid:
+        is_valid = validate_changelog_content(content)
+
+        if not is_valid:
+            if click.confirm("The changes will be lost if the file is invalid.\nDo you want to edit it?",
+                             default=True, abort=True):
+                # Allow the user to edit the content of the entry
+                content = click.edit(content)
+
+    return content
+
+
+def write_changelog_entry(dirpath, title, content, overwrite=False):
+    """Store the contents of an entry in a file."""
 
     filepath = determine_filepath(dirpath, title)
 
