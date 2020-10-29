@@ -17,6 +17,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 import os
@@ -189,6 +190,11 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.push.assert_any_call('myremote', 'master')
             mock_project.return_value.repo.push.assert_any_call('myremote', '0.8.10')
 
+            # Check non called rollback mock calls
+            mock_project.return_value.repo.reset_head.assert_not_called()
+            mock_project.return_value.repo.restore_staged.assert_not_called()
+            mock_project.return_value.repo.restore_unstaged.assert_not_called()
+
     @unittest.mock.patch('release_tools.publish.Project')
     def test_only_publish_to_remote(self, mock_project):
         """Test if when '--only-push' is set only tries to push the release commits and tags."""
@@ -242,7 +248,7 @@ class TestPublish(unittest.TestCase):
         runner = click.testing.CliRunner(mix_stderr=False)
 
         with runner.isolated_filesystem() as fs:
-            dirpath =  os.path.join(fs, 'releases', 'unreleased')
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
             mock_project.return_value.unreleased_changes_path = dirpath
 
             # Run the command
@@ -293,6 +299,10 @@ class TestPublish(unittest.TestCase):
             # Check called mock calls
             mock_project.return_value.repo.rm.assert_called()
 
+            # Check called rollback mock calls
+            mock_project.return_value.repo.restore_staged.assert_called()
+            mock_project.return_value.repo.restore_unstaged.assert_called()
+
             # Check non called mock calls not called
             mock_project.return_value.repo.add.assert_not_called()
             mock_project.return_value.repo.commit.assert_not_called()
@@ -332,6 +342,10 @@ class TestPublish(unittest.TestCase):
             # Check called mock calls
             mock_project.return_value.repo.rm.assert_called()
             mock_project.return_value.repo.add.assert_called_once_with(version_file)
+
+            # Check called rollback mock calls
+            mock_project.return_value.repo.restore_staged.assert_called()
+            mock_project.return_value.repo.restore_unstaged.assert_called()
 
             # Check non called mock calls not called
             mock_project.return_value.repo.commit.assert_not_called()
@@ -373,6 +387,10 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.rm.assert_called()
             mock_project.return_value.repo.add.assert_any_call(version_file)
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
+
+            # Check called rollback mock calls
+            mock_project.return_value.repo.restore_staged.assert_called()
+            mock_project.return_value.repo.restore_unstaged.assert_called()
 
             # Check non called mock calls not called
             mock_project.return_value.repo.commit.assert_not_called()
@@ -419,6 +437,10 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.add.assert_any_call(version_file)
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
+
+            # Check called rollback mock calls
+            mock_project.return_value.repo.restore_staged.assert_called()
+            mock_project.return_value.repo.restore_unstaged.assert_called()
 
             # Check non called mock calls not called
             mock_project.return_value.repo.commit.assert_not_called()
@@ -483,6 +505,10 @@ class TestPublish(unittest.TestCase):
             # The process failed when commit command was called
             mock_project.return_value.repo.commit.assert_called_once_with("Release 0.8.10",
                                                                           "John Smith <jsmith@example.org>")
+
+            # Check called rollback mock calls
+            mock_project.return_value.repo.reset_head.assert_called()
+            mock_project.return_value.repo.restore_unstaged.assert_called()
 
             # Tag and push methods were not called
             mock_project.return_value.repo.tag.assert_not_called()

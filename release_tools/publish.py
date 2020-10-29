@@ -18,6 +18,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 """
@@ -105,6 +106,12 @@ def remove_unreleased_changelog_entries(project):
     click.echo("done")
 
 
+def rollback_add_release_files(project):
+    click.echo("rollback to the last consistent state")
+    project.repo.restore_staged()
+    project.repo.restore_unstaged(project.unreleased_changes_path)
+
+
 def add_release_files(project, version):
     """Add to the repository all the files needed to publish a release."""
 
@@ -114,6 +121,7 @@ def add_release_files(project, version):
     version_file = project.version_file
 
     if not version_file:
+        rollback_add_release_files(project)
         raise click.ClickException("version file not found")
 
     project.repo.add(version_file)
@@ -122,6 +130,7 @@ def add_release_files(project, version):
     pyproject_file = project.pyproject_file
 
     if not pyproject_file:
+        rollback_add_release_files(project)
         raise click.ClickException("pyproject file not found")
 
     project.repo.add(pyproject_file)
@@ -131,6 +140,7 @@ def add_release_files(project, version):
 
     if not os.path.exists(notes_file):
         msg = "release notes file {} not found".format(notes_file)
+        rollback_add_release_files(project)
         raise click.ClickException(msg)
 
     project.repo.add(notes_file)
@@ -140,6 +150,7 @@ def add_release_files(project, version):
 
     if not os.path.exists(news_file):
         msg = "news file not found"
+        rollback_add_release_files(project)
         raise click.ClickException(msg)
 
     project.repo.add(news_file)
@@ -147,14 +158,24 @@ def add_release_files(project, version):
     click.echo("done")
 
 
+def rollback_commit(project):
+    click.echo("rollback to the last consistent state")
+    project.repo.reset_head()
+    project.repo.restore_unstaged(project.unreleased_changes_path)
+
+
 def commit(project, version, author):
     """Add a release commit and tag."""
 
     click.echo("Creating release commit...", nl=False)
 
-    msg = "Release {}".format(version)
-    project.repo.commit(msg, author)
-    project.repo.tag(version)
+    try:
+        msg = "Release {}".format(version)
+        project.repo.commit(msg, author)
+        project.repo.tag(version)
+    except RepositoryError as e:
+        rollback_commit(project)
+        raise click.ClickException(e)
 
     click.echo("done")
 

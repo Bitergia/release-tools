@@ -18,6 +18,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 import os
@@ -70,6 +71,18 @@ class GitHandler:
 
     def push(self, remote, ref):
         cmd = ['git', 'push', remote, ref]
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
+    def reset_head(self):
+        cmd = ['git', 'reset', 'HEAD^']
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
+    def restore_staged(self):
+        cmd = ['git', 'restore', '--staged', '.']
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
+    def restore_unstaged(self, dirpath):
+        cmd = ['git', 'restore', dirpath]
         self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
 
     def find_file(self, filename):
