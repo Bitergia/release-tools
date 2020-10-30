@@ -338,11 +338,56 @@ you can create a new one using `poetry init`.
 $ poetry init
 ```
 
-### Error: pathspec \<filepath\> did not match any files; code error: 128
+### Error: pathspec '\<filepath\>' did not match any files; code error: 128
 
 The file `<filepath>` must be tracked by your git repository. Add it to
 your repo. Usually you'll get this error if you forgot to add your
 changelog entry notes to the repository.
+
+### Error: tag '\<tag\>' already exists; code error: 128
+
+If you have a existing tag with the same version, you can expect 
+this error. You can delete the tag using `git tag -d version` and 
+create the release commit again using publish.
+
+```
+$ git tag -d 0.2.0
+$ publish 0.2.0 "John Smith <jsmith@example.com>" --push origin
+```
+
+### Error: error: src refspec '\<branch\>' does not match any
+
+You can expect this error if you are not using `master` as your default 
+branch. You can change this in the codebase (push method of the publish.py) 
+if you are using any other branch as default.
+
+If you are using `main` as default branch, change `master` to `main`.
+
+```
+-   project.repo.push(remote, 'master')
++   project.repo.push(remote, 'main')
+```
+
+You can use `publish` and set `--only-push` together with `--push` option 
+as the release is committed but not pushed yet.
+
+```
+$ publish 0.2.0 "John Smith <jsmith@example.com>" --push origin --only-push
+Publishing release in origin...done
+```
+
+
+### Error: Authentication failed for '\<github-url\>'; code error: 128
+
+If the release commit is created and you failed to publish the release 
+because of invalid credentials for git, you can use `publish` and 
+set `--only-push` together with `--push` option as the release is committed
+but not pushed yet.
+
+```
+$ publish 0.2.0 "John Smith <jsmith@example.com>" --push origin --only-push
+Publishing release in origin...done
+```
 
 
 ## License
