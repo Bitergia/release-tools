@@ -21,7 +21,7 @@ jobs:
         run: |
           source $HOME/.poetry/env
           poetry install -vvv
-          poetry add -D coveralls
+          poetry add -D coveralls==2.2.0
       - name: Lint with flake8
         run: |
           source $HOME/.poetry/env
@@ -33,4 +33,4 @@ jobs:
           source $HOME/.poetry/env
           cd tests
           poetry run coverage run --source=release_tools run_tests.py
-          poetry run coveralls --service=github
+          poetry run coveralls --service=github -v
