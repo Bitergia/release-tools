@@ -1,4 +1,4 @@
-# GrimoireLab Release Tools
+# GrimoireLab Release Tools [![Build Status](https://github.com/Bitergia/release-tools/workflows/tests/badge.svg)](https://github.com/Bitergia/release-tools/actions?query=workflow:tests+branch:master+event:push)
 
 Set of tools to generate GrimoireLab releases.
 
