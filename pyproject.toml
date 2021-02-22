@@ -46,6 +46,7 @@ semver = "^2.9"
 tomlkit = "^0.5.8"
 
 [tool.poetry.dev-dependencies]
+flake8 = "^3.8.4"
 
 [build-system]
 requires = ["poetry>=0.12"]
