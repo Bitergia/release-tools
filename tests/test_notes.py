@@ -18,6 +18,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 import os
@@ -84,10 +85,10 @@ CHANGELOG_DIR_NOT_FOUND_ERROR = (
     r"Error: changelog entries directory '.+' does not exist"
 )
 INVALID_NAME_ERROR = (
-    "Error: Invalid value for \"NAME\": cannot be empty"
+    "Error: Invalid value for \"|\'NAME\"|\': cannot be empty"
 )
 INVALID_VERSION_ERROR = (
-    "Error: Invalid value for \"VERSION\": cannot be empty"
+    "Error: Invalid value for \"|\'VERSION\"|\': cannot be empty"
 )
 
 
@@ -445,19 +446,19 @@ class TestNotes(unittest.TestCase):
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_NAME_ERROR)
+        self.assertRegex(lines[-2], INVALID_NAME_ERROR)
 
         # Only whitespaces are not allowed
         result = runner.invoke(notes, [' '])
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_NAME_ERROR)
+        self.assertRegex(lines[-2], INVALID_NAME_ERROR)
 
         # Only control characters are not allowed
         result = runner.invoke(notes, ['\n\r\n'])
         self.assertEqual(result.exit_code, 2)
-        self.assertEqual(lines[-2], INVALID_NAME_ERROR)
+        self.assertRegex(lines[-2], INVALID_NAME_ERROR)
 
     def test_invalid_version(self):
         """Check whether version argument is validated correctly"""
@@ -469,19 +470,19 @@ class TestNotes(unittest.TestCase):
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_VERSION_ERROR)
+        self.assertRegex(lines[-2], INVALID_VERSION_ERROR)
 
         # Only whitespaces are not allowed
         result = runner.invoke(notes, ['release-tools', ' '])
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_VERSION_ERROR)
+        self.assertRegex(lines[-2], INVALID_VERSION_ERROR)
 
         # Only control characters are not allowed
         result = runner.invoke(notes, ['release-tools', '\n\r\n'])
         self.assertEqual(result.exit_code, 2)
-        self.assertEqual(lines[-2], INVALID_VERSION_ERROR)
+        self.assertRegex(lines[-2], INVALID_VERSION_ERROR)
 
 
 if __name__ == '__main__':

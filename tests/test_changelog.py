@@ -18,6 +18,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 import os
@@ -40,15 +41,15 @@ EMPTY_CONTENT_ERROR = (
     "Error: Aborting due to empty entry content"
 )
 INVALID_TITLE_ERROR = (
-    "Error: Invalid value for \"-t\" / \"--title\": title cannot be empty"
+    r"Error: Invalid value for \"|\'-t\"|\' / \"|\'--title\"|\': title cannot be empty"
 )
-INVALID_CATEGORY_ERROR = (
-    "Error: Invalid value for \"-c\" / \"--category\": "
-    "valid options are "
-    "['added', 'fixed', 'changed', 'deprecated', 'removed', 'security', 'performance', 'other']"
-)
+INVALID_CATEGORY_ERROR = [
+    "Error",
+    r" Invalid value for \"|\'-c\"|\' / \"|\'--category\"|\'",
+    " valid options are ['added', 'fixed', 'changed', 'deprecated', 'removed', 'security', 'performance', 'other']"
+]
 INVALID_CATEGORY_INDEX_ERROR = (
-    "Error: Invalid value for \"-c\" / \"--category\": please select an index between 1 and 8"
+    r"Error: Invalid value for \"|\'-c\"|\' / \"|\'--category\"|\': please select an index between 1 and 8"
 )
 
 
@@ -284,7 +285,9 @@ class TestChangelog(unittest.TestCase):
         """Check if it doesn't create the file if the content is invalid."""
 
         runner = click.testing.CliRunner(mix_stderr=False)
-        user_input = "new change\n1\ny"
+
+        # 'n' means the user refuses to edit the entry when there is an error
+        user_input = "new change\n1\ny\nn"
 
         with runner.isolated_filesystem() as fs:
             dirpath = os.path.join(fs, 'releases', 'unreleased')
@@ -309,19 +312,19 @@ class TestChangelog(unittest.TestCase):
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_TITLE_ERROR)
+        self.assertRegex(lines[-2], INVALID_TITLE_ERROR)
 
         # Only whitespaces are not allowed
         result = runner.invoke(changelog.changelog, ['--title', ' '])
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_TITLE_ERROR)
+        self.assertRegex(lines[-2], INVALID_TITLE_ERROR)
 
         # Only control characters are not allowed
         result = runner.invoke(changelog.changelog, ['--title', '\n\r\n'])
         self.assertEqual(result.exit_code, 2)
-        self.assertEqual(lines[-2], INVALID_TITLE_ERROR)
+        self.assertRegex(lines[-2], INVALID_TITLE_ERROR)
 
     def test_invalid_category(self):
         """Check whether category param is validated correctly"""
@@ -333,14 +336,17 @@ class TestChangelog(unittest.TestCase):
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_CATEGORY_ERROR)
+        lines = lines[-2].split(':')
+        self.assertEqual(lines[0], INVALID_CATEGORY_ERROR[0])
+        self.assertRegex(lines[1], INVALID_CATEGORY_ERROR[1])
+        self.assertEqual(lines[2], INVALID_CATEGORY_ERROR[2])
 
         # Invalid indexes are not allowed
         result = runner.invoke(changelog.changelog, ['--category', '42'])
         self.assertEqual(result.exit_code, 2)
 
         lines = result.stderr.split('\n')
-        self.assertEqual(lines[-2], INVALID_CATEGORY_INDEX_ERROR)
+        self.assertRegex(lines[-2], INVALID_CATEGORY_INDEX_ERROR)
 
 
 if __name__ == '__main__':

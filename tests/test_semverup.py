@@ -126,7 +126,6 @@ class TestSemVerUp(unittest.TestCase):
                                 fd.read(), re.MULTILINE).group(1)
         return version
 
-
     @staticmethod
     def read_version_number_from_pyproject(filepath):
         """Returns the version number stored in a pyproject file"""
@@ -137,7 +136,6 @@ class TestSemVerUp(unittest.TestCase):
         poetry_metadata = metadata["tool"]["poetry"]
 
         return poetry_metadata["version"]
-
 
     @unittest.mock.patch('release_tools.semverup.Project')
     def test_version_is_updated(self, mock_project):
