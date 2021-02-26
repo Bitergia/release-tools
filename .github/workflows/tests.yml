@@ -21,16 +21,19 @@ jobs:
         run: |
           source $HOME/.poetry/env
           poetry install -vvv
-          poetry add -D coveralls
+          poetry add -D coverage
       - name: Lint with flake8
         run: |
           source $HOME/.poetry/env
           poetry run flake8
-      - name: Tests and Coveralls
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Tests and coverage
         run: |
           source $HOME/.poetry/env
-          cd tests
-          poetry run coverage run --source=release_tools run_tests.py
-          poetry run coveralls --service=github
+          poetry run coverage run --source=release_tools tests/run_tests.py
+          poetry run coverage report -m
+          poetry run coverage xml
+      - name: Send coverage report to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: true
