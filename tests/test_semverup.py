@@ -18,6 +18,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 import os
@@ -30,6 +31,7 @@ import tomlkit.toml_file
 
 from release_tools import semverup
 from release_tools.entry import CategoryChange
+from release_tools.repo import RepositoryError
 
 
 VERSION_FILE_NOT_FOUND = (
@@ -55,6 +57,9 @@ CHANGELOG_DIR_NOT_FOUND = (
 )
 CHANGELOG_INVALID_ENTRY_ERROR = (
     r"Error: invalid format for .+; 'title' attribute not found"
+)
+MOCK_REPOSIORY_ERROR = (
+    "Error: mock repository error"
 )
 
 
@@ -371,6 +376,22 @@ class TestSemVerUp(unittest.TestCase):
             # Pyproject version number did not change either
             version = self.read_version_number_from_pyproject(project_file)
             self.assertEqual(version, "0.8.10")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_repository_error(self, mock_project):
+        """Check if it stops working when it encounters RepositoryError exception"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            mock_project.side_effect = RepositoryError('mock repository error')
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup)
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertEqual(lines[-2], MOCK_REPOSIORY_ERROR)
 
     @unittest.mock.patch('release_tools.semverup.Project')
     def test_version_file_not_found(self, mock_project):
