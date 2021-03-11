@@ -29,7 +29,7 @@ import click.testing
 import yaml
 
 from release_tools import changelog
-
+from release_tools.repo import RepositoryError
 
 CHANGELOG_ENTRIES_DIR_ERROR = (
     "Error: Changelog entries directory is needed to continue."
@@ -50,6 +50,15 @@ INVALID_CATEGORY_ERROR = [
 ]
 INVALID_CATEGORY_INDEX_ERROR = (
     r"Error: Invalid value for \"|\'-c\"|\' / \"|\'--category\"|\': please select an index between 1 and 8"
+)
+MOCK_OS_ERROR = (
+    "Error: Unable to create directory. mock os error"
+)
+MOCK_REPOSITORY_ERROR = (
+    "Error: mock repository error"
+)
+CHANGELOG_ENTRY_CONTENT = (
+    """---\ntitle: new change\ncategory: fixed\nauthor: null\nissue: null\nnotes: null"""
 )
 
 
@@ -83,6 +92,56 @@ class TestChangelog(unittest.TestCase):
                 self.assertEqual(entry['author'], None)
                 self.assertEqual(entry['issue'], None)
                 self.assertEqual(entry['notes'], None)
+
+    @unittest.mock.patch('release_tools.changelog.Project')
+    def test_entry_repository_error(self, mock_project):
+        """Check if it stops working when it encounters RepositoryError exception"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+        user_input = "new change\n1\ny"
+
+        with runner.isolated_filesystem() as fs:
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.side_effect = RepositoryError('mock repository error')
+
+            result = runner.invoke(changelog.changelog, ['--no-editor'],
+                                   input=user_input)
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertEqual(lines[-2], MOCK_REPOSITORY_ERROR)
+
+            # Nothing was created in the directory
+            self.assertEqual(len(os.listdir(fs)), 0)
+
+    @unittest.mock.patch('release_tools.changelog.Project')
+    def test_entry_dry_run(self, mock_project):
+        """Check if a changelog entry is created when --dry-run flag is enabled"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+        user_input = "y\n"
+
+        with runner.isolated_filesystem() as fs:
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            # Create an entry first
+            params = [
+                '--title', 'new change',
+                '--category', 'fixed',
+                '--no-editor', '--dry-run'
+            ]
+            result = runner.invoke(changelog.changelog, params,
+                                   input=user_input)
+            self.assertEqual(result.exit_code, 0)
+
+            self.assertEqual(os.path.exists(dirpath), True)
+
+            filepath = os.path.join(dirpath, 'new-change.yml')
+            self.assertEqual(os.path.exists(filepath), False)
+
+            lines = result.stdout.split('\n\n')
+            self.assertEqual(lines[-2], CHANGELOG_ENTRY_CONTENT)
 
     @unittest.mock.patch('release_tools.changelog.Project')
     def test_entry_is_not_overwritten(self, mock_project):
@@ -243,6 +302,30 @@ class TestChangelog(unittest.TestCase):
             # Nothing was created in the directory
             self.assertEqual(len(os.listdir(fs)), 0)
 
+    @unittest.mock.patch('release_tools.changelog.Project')
+    @unittest.mock.patch('release_tools.changelog.os.makedirs')
+    def test_entries_dir_os_error(self, mock_os, mock_project):
+        """Check if it stops working when it encounters OSError exception"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        user_input = "new change\n1\ny"
+
+        with runner.isolated_filesystem() as fs:
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_os.side_effect = OSError('mock os error')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            result = runner.invoke(changelog.changelog, ['--no-editor'],
+                                   input=user_input)
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertEqual(lines[-2], MOCK_OS_ERROR)
+
+            # Nothing was created in the directory
+            self.assertEqual(len(os.listdir(fs)), 0)
+
     def test_validate_content(self):
         """Check if the content of the entry file is valid."""
 
@@ -301,6 +384,21 @@ class TestChangelog(unittest.TestCase):
 
             filepath = os.path.join(dirpath, 'new-change.yml')
             self.assertEqual(os.path.exists(filepath), False)
+
+    @unittest.mock.patch('release_tools.changelog.click')
+    def test_edit_invalid_changelog_entry(self, mock_click):
+        """Check if it gives an option to edit the file if the content is invalid."""
+
+        good_entry = "---\ntitle: new change\ncategory: fixed\n"
+        good_entry += "author: john\nissue: 2\nnotes: null\n"
+
+        bad_entry = "---\ntitle: new change\ncategory: fixed\n"
+        bad_entry += "author: :\nissue: 2\nnotes: null\n"
+
+        mock_click.edit.return_value = good_entry
+
+        result = changelog.validate_changelog_entry(bad_entry)
+        self.assertEqual(result, good_entry)
 
     def test_invalid_title(self):
         """Check whether title param is validated correctly"""

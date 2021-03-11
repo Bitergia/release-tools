@@ -56,6 +56,9 @@ REPOSITORY_ERROR = (
 VERSION_FILE_NOT_FOUND_ERROR = (
     r"Error: version file not found"
 )
+MOCK_REPOSITORY_ERROR = (
+    "Error: mock repository error"
+)
 
 
 class TestPublish(unittest.TestCase):
@@ -194,6 +197,42 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.reset_head.assert_not_called()
             mock_project.return_value.repo.restore_staged.assert_not_called()
             mock_project.return_value.repo.restore_unstaged.assert_not_called()
+
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_publish_repository_error(self, mock_project):
+        """Check if it stops working when it encounters RepositoryError exception"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            mock_project.side_effect = RepositoryError('mock repository error')
+
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], MOCK_REPOSITORY_ERROR)
+
+    @unittest.mock.patch('release_tools.publish.remove_unreleased_changelog_entries')
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_remove_unreleased_changelog_entries_repository_error(
+            self, mock_project, mock_remove_unreleased_changelog):
+        """Check if it stops working when it encounters RepositoryError exception"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            mock_remove_unreleased_changelog.side_effect = RepositoryError('mock repository error')
+
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], MOCK_REPOSITORY_ERROR)
 
     @unittest.mock.patch('release_tools.publish.Project')
     def test_only_publish_to_remote(self, mock_project):

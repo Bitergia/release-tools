@@ -21,14 +21,16 @@
 #     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
+import datetime
 import os
 import unittest
 import unittest.mock
 
 import click.testing
 
-from release_tools.notes import notes
+from release_tools.notes import notes, ReleaseNotesComposer
 from release_tools.entry import CategoryChange
+from release_tools.repo import RepositoryError
 
 
 RELEASE_NOTES_CONTENT = """## release-tools 0.8.10 - (2019-01-01)
@@ -89,6 +91,9 @@ INVALID_NAME_ERROR = (
 )
 INVALID_VERSION_ERROR = (
     "Error: Invalid value for \"|\'VERSION\"|\': cannot be empty"
+)
+MOCK_REPOSITORY_ERROR = (
+    "Error: fatal: not a git repository (or any of the parent directories): .git; code error: 128"
 )
 
 
@@ -179,6 +184,28 @@ class TestNotes(unittest.TestCase):
                 text = fd.read()
 
             self.assertEqual(text, NEWS_FILE_ORIGINAL_CONTENT)
+
+    @unittest.mock.patch('release_tools.changelog.Project')
+    def test_entry_repository_error(self, mock_project):
+        """Check if it stops working when it encounters RepositoryError exception"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            self.setup_unreleased_entries(changes_path)
+
+            mock_project.side_effect = RepositoryError()
+
+            # Run the script command
+            result = runner.invoke(notes, ['release-tools', '0.8.10'])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertEqual(lines[-2], MOCK_REPOSITORY_ERROR)
+
+            filepath = os.path.join(fs, 'releases', '0.8.10.md')
+            self.assertEqual(os.path.exists(filepath), False)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
@@ -435,6 +462,14 @@ class TestNotes(unittest.TestCase):
 
             lines = result.stderr.split('\n')
             self.assertRegex(lines[-2], CHANGELOG_DIR_NOT_FOUND_ERROR)
+
+    @unittest.mock.patch('release_tools.notes.datetime')
+    def test_datetime_utcnow_str(self, mock_datetime):
+        """Check if the correct formatted string of the datetime is returned"""
+
+        mock_datetime.datetime.utcnow.return_value = datetime.datetime(2019, 1, 1)
+        result = ReleaseNotesComposer._datetime_utcnow_str()
+        self.assertEqual(result, '2019-01-01')
 
     def test_invalid_name(self):
         """Check whether name argument is validated correctly"""
