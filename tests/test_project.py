@@ -17,6 +17,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 import unittest
@@ -75,6 +76,18 @@ class TestProject(unittest.TestCase):
 
         expected = "/tmp/repo/NEWS"
         self.assertEqual(project.news_file, expected)
+
+    @unittest.mock.patch('release_tools.project.GitHandler.root_path',
+                         new_callable=unittest.mock.PropertyMock)
+    def test_authors_file(self, mock_root_path):
+        """Check if the property returns the authors file path"""
+
+        mock_root_path.return_value = "/tmp/repo/"
+
+        project = Project('/tmp/repo/')
+
+        expected = "/tmp/repo/AUTHORS"
+        self.assertEqual(project.authors_file, expected)
 
     @unittest.mock.patch('release_tools.project.GitHandler.find_file')
     @unittest.mock.patch('release_tools.project.GitHandler.root_path',

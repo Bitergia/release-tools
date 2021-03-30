@@ -18,6 +18,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 """
@@ -58,9 +59,11 @@ def validate_argument(ctx, param, value):
               help="Force to replace an existing release notes entry.")
 @click.option('--news', is_flag=True,
               help="Update NEWS file with the release notes.")
+@click.option('--authors', is_flag=True,
+              help="Update AUTHORS file with the release notes.")
 @click.argument('name', callback=validate_argument)
 @click.argument('version', callback=validate_argument)
-def notes(name, version, dry_run, overwrite, news):
+def notes(name, version, dry_run, overwrite, news, authors):
     """Generate release notes.
 
     When you run this script, it will generate the release notes of the
@@ -73,6 +76,9 @@ def notes(name, version, dry_run, overwrite, news):
 
     If you also want to add the content of these release notes to the NEWS
     file, use the flag `--news`.
+
+    If you want to add the contributor names of these release notes to the
+    AUTHORS file, use the flag `--authors`.
 
     In the case a release notes file for the same version already exists,
     an error will be raised. Use '--overwrite' to force to replace the
@@ -97,6 +103,10 @@ def notes(name, version, dry_run, overwrite, news):
     else:
         write_release_notes(project, version, md,
                             overwrite=overwrite, news=news)
+
+    if authors:
+        au_content = compose_author_content(project, entry_list)
+        write_authors_file(project, au_content)
 
 
 def read_unreleased_changelog_entries(project):
@@ -137,6 +147,15 @@ def compose_release_notes(title, version, entries):
     return content
 
 
+def compose_author_content(project, entries):
+    """Generate the authors file content."""
+
+    composer = AuthorsFileComposer()
+    content = composer.compose(project, entries)
+
+    return content
+
+
 def write_release_notes(project, version, content,
                         overwrite=False, news=False):
     """Write the release notes."""
@@ -171,6 +190,17 @@ def write_release_notes_file(project, version, content, overwrite):
         click.echo("Release notes file '{}' created".format(filename))
 
     return filepath
+
+
+def write_authors_file(project, content):
+    """Write the authors content to the authors file."""
+
+    authors_file = project.authors_file
+
+    with open(authors_file, 'w') as fd:
+        fd.write(content)
+
+    click.echo("Authors file updated")
 
 
 def update_news_file(project, version, content):
@@ -305,6 +335,43 @@ class ReleaseNotesComposer:
 
         # Entries with empty issue will be pushed to the end of the list
         return sorted(entries, key=lambda e: int(e.issue) if e.issue else sys.maxsize)
+
+
+class AuthorsFileComposer:
+    """Authors file content composer."""
+
+    def compose(self, project, entries):
+        """Generate authors file content from release notes."""
+
+        authors = self._extract_authors(project)
+
+        for entry_list in entries.values():
+            for entry in ReleaseNotesComposer._sort_entries_by_id(entry_list):
+                if entry.author not in authors:
+                    authors.append(entry.author)
+
+        content = ""
+
+        for author in authors:
+            content += author + "\n"
+
+        content += "\n"
+
+        return content
+
+    def _extract_authors(self, project):
+        """Extract authors from the authors file."""
+
+        authors_file = project.authors_file
+
+        # Read old content
+        try:
+            with open(authors_file, 'r') as fd:
+                authors = fd.read().splitlines()[:-1]
+        except FileNotFoundError:
+            authors = []
+
+        return authors
 
 
 if __name__ == "__main__":

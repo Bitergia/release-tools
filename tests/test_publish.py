@@ -35,6 +35,7 @@ RELEASE_NOTES_CONTENT = """## release-tools 0.8.10 - (2019-01-01)
 No changes list available.
 
 """
+AUTHORS_FILE_CONTENT = """jdoe\njsmith\n\n"""
 ONLY_PUSH_ERROR = (
     r"Error: '--only-push' flag must be set together with '--push'"
 )
@@ -49,6 +50,9 @@ RELEASE_NOTES_FILE_NOT_FOUND_ERROR = (
 )
 NEWS_FILE_NOT_FOUND_ERROR = (
     r"Error: news file not found"
+)
+AUTHORS_FILE_NOT_FOUND_ERROR = (
+    r"Error: authors file not found"
 )
 REPOSITORY_ERROR = (
     r"Error: generated mock error"
@@ -65,7 +69,7 @@ class TestPublish(unittest.TestCase):
     """Unit tests for publish script"""
 
     @staticmethod
-    def setup_release_notes(dirpath, filepath, newsfile=None):
+    def setup_release_notes(dirpath, filepath, newsfile=None, authorsfile=None):
         """Set up the release notes file."""
 
         os.makedirs(dirpath, exist_ok=True)
@@ -76,6 +80,10 @@ class TestPublish(unittest.TestCase):
         if newsfile:
             with open(newsfile, mode='w') as fd:
                 fd.write(RELEASE_NOTES_CONTENT)
+
+        if authorsfile:
+            with open(authorsfile, mode='w') as fd:
+                fd.write(AUTHORS_FILE_CONTENT)
 
     @unittest.mock.patch('release_tools.publish.read_changelog_entries')
     @unittest.mock.patch('release_tools.publish.Project')
@@ -96,8 +104,9 @@ class TestPublish(unittest.TestCase):
             pyproject_file = os.path.join(fs, 'pyproject.toml')
             notes_file = os.path.join(fs, version_number + '.md')
             news_file = os.path.join(fs, 'NEWS')
+            authors_file = os.path.join(fs, 'AUTHORS')
 
-            self.setup_release_notes(fs, notes_file, newsfile=news_file)
+            self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_read_changelog.return_value = files
             mock_project.return_value.unreleased_changes_path = fs
@@ -105,6 +114,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
             mock_project.return_value.news_file = news_file
+            mock_project.return_value.authors_file = authors_file
 
             # Run the command
             result = runner.invoke(publish.publish,
@@ -125,6 +135,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
             mock_project.return_value.repo.add.assert_any_call(news_file)
+            mock_project.return_value.repo.add.assert_any_call(authors_file)
 
             # Commit and tag were only called once
             mock_project.return_value.repo.commit.assert_called_once_with("Release 0.8.10",
@@ -153,8 +164,9 @@ class TestPublish(unittest.TestCase):
             pyproject_file = os.path.join(fs, 'pyproject.toml')
             notes_file = os.path.join(fs, version_number + '.md')
             news_file = os.path.join(fs, 'NEWS')
+            authors_file = os.path.join(fs, 'AUTHORS')
 
-            self.setup_release_notes(fs, notes_file, newsfile=news_file)
+            self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_read_changelog.return_value = files
             mock_project.return_value.unreleased_changes_path = fs
@@ -162,6 +174,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
             mock_project.return_value.news_file = news_file
+            mock_project.return_value.authors_file = authors_file
 
             # Run the command
             result = runner.invoke(publish.publish,
@@ -183,6 +196,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
             mock_project.return_value.repo.add.assert_any_call(news_file)
+            mock_project.return_value.repo.add.assert_any_call(authors_file)
 
             # Commit and tag were only called once
             mock_project.return_value.repo.commit.assert_called_once_with("Release 0.8.10",
@@ -488,6 +502,56 @@ class TestPublish(unittest.TestCase):
 
     @unittest.mock.patch('release_tools.publish.read_changelog_entries')
     @unittest.mock.patch('release_tools.publish.Project')
+    def test_no_authors_file_error(self, mock_project, mock_read_changelog):
+        """Test if it fails when the authors file does not exist."""
+
+        files = {
+            'file1': 'content',
+            'file2': 'content',
+            'file3': 'content'
+        }
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
+            notes_file = os.path.join(fs, '0.8.10.md')
+
+            mock_read_changelog.return_value = files
+            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.releases_path = fs
+            mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = pyproject_file
+            mock_project.return_value.authors_file = 'AUTHORSgit '
+
+            self.setup_release_notes(fs, notes_file)
+
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], AUTHORS_FILE_NOT_FOUND_ERROR)
+
+            # Check called mock calls
+            mock_project.return_value.repo.rm.assert_called()
+            mock_project.return_value.repo.add.assert_any_call(version_file)
+            mock_project.return_value.repo.add.assert_any_call(pyproject_file)
+            mock_project.return_value.repo.add.assert_any_call(notes_file)
+
+            # Check called rollback mock calls
+            mock_project.return_value.repo.restore_staged.assert_called()
+            mock_project.return_value.repo.restore_unstaged.assert_called()
+
+            # Check non called mock calls not called
+            mock_project.return_value.repo.commit.assert_not_called()
+            mock_project.return_value.repo.tag.assert_not_called()
+            mock_project.return_value.repo.push.assert_not_called()
+
+    @unittest.mock.patch('release_tools.publish.read_changelog_entries')
+    @unittest.mock.patch('release_tools.publish.Project')
     def test_repository_error(self, mock_project, mock_read_changelog):
         """Test if it fails when an error is found in the repository."""
 
@@ -505,8 +569,9 @@ class TestPublish(unittest.TestCase):
             pyproject_file = os.path.join(fs, 'pyproject.toml')
             notes_file = os.path.join(fs, version_number + '.md')
             news_file = os.path.join(fs, 'NEWS')
+            authors_file = os.path.join(fs, 'AUTHORS')
 
-            self.setup_release_notes(fs, notes_file, newsfile=news_file)
+            self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_read_changelog.return_value = files
             mock_project.return_value.unreleased_changes_path = fs
@@ -514,6 +579,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
             mock_project.return_value.news_file = news_file
+            mock_project.return_value.authors_file = authors_file
 
             mock_project.return_value.repo.commit.side_effect = RepositoryError("generated mock error")
 
@@ -540,6 +606,7 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
             mock_project.return_value.repo.add.assert_any_call(news_file)
+            mock_project.return_value.repo.add.assert_any_call(authors_file)
 
             # The process failed when commit command was called
             mock_project.return_value.repo.commit.assert_called_once_with("Release 0.8.10",
