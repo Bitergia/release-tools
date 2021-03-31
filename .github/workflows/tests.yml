@@ -18,19 +18,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}    
       - name: Install and set up Poetry
-        run: curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+        run: |
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+          echo "PATH=$HOME/.poetry/bin:$PATH" >> $GITHUB_ENV
       - name: Install dependencies
         run: |
-          source $HOME/.poetry/env
           poetry install -vvv
           poetry add -D coverage
       - name: Lint with flake8
         run: |
-          source $HOME/.poetry/env
           poetry run flake8
       - name: Tests and coverage
         run: |
-          source $HOME/.poetry/env
           poetry run coverage run --source=release_tools tests/run_tests.py
           poetry run coverage report -m
           poetry run coverage xml
