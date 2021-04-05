@@ -155,6 +155,16 @@ def add_release_files(project, version):
 
     project.repo.add(news_file)
 
+    # Add AUTHORS file
+    authors_file = project.authors_file
+
+    if not os.path.exists(authors_file):
+        msg = "authors file not found"
+        rollback_add_release_files(project)
+        raise click.ClickException(msg)
+
+    project.repo.add(authors_file)
+
     click.echo("done")
 
 

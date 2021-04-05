@@ -1,0 +1,12 @@
+---
+title: Add option to update AUTHORS file content
+category: added
+author: Venu Vardhan Reddy Tekula <venu@bitergia.com>
+issue: null
+notes: >
+    The AUTHORS file has to updated periodically with the
+    names of the contributors. This has to be done manually.
+    
+    This feature adds the option `--authors` which allows to
+    update the AUTHORS file with the names extracted from the
+    unreleased changelog entries.

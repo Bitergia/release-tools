@@ -236,6 +236,15 @@ $ notes "MyApp" 0.2.0 --dry-run
    a magician.
 ```
 
+If you want to add the contributor names of these release notes to the 
+AUTHORS file, use the flag `--authors`.
+
+```
+$ notes "MyApp" 0.2.0 --authors
+Release notes file '0.2.0.md' created
+Authors file updated
+```
+
 ### publish
 
 This script will generate a new release in the repository.

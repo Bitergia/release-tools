@@ -17,6 +17,7 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Venu Vardhan Reddy Tekula <venu@bitergia.com>
 #
 
 import os
@@ -25,6 +26,7 @@ from release_tools.repo import GitHandler
 
 
 NEWS_FILENAME = 'NEWS'
+AUTHORS_FILENAME = 'AUTHORS'
 PYPROJECT_FILENAME = 'pyproject.toml'
 VERSION_FILENAME = '_version.py'
 
@@ -50,6 +52,12 @@ class Project:
         """Path the the news file."""
 
         return os.path.join(self.basepath, NEWS_FILENAME)
+
+    @property
+    def authors_file(self):
+        """Path the the authors file."""
+
+        return os.path.join(self.basepath, AUTHORS_FILENAME)
 
     @property
     def pyproject_file(self):

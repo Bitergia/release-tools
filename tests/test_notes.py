@@ -74,6 +74,8 @@ Initial release
 """
 NEWS_FILE_CONTENT = """# Releases\n\n""" + RELEASE_NOTES_CONTENT + NEWS_FILE_ORIGINAL_CONTENT[11:] + "\n"
 
+AUTHORS_FILE_ORIGINAL_CONTENT = """jdoe\n\n"""
+AUTHORS_FILE_CONTENT = """jdoe\njsmith\n\n"""
 RELEASE_NOTES_FILE_ALREADY_EXISTS_ERROR = (
     "Error: Release notes for version 0.8.10 already exist. Use '--overwrite' to replace it."
 )
@@ -151,6 +153,13 @@ class TestNotes(unittest.TestCase):
 
         with open(filepath, mode='w') as fd:
             fd.write(NEWS_FILE_ORIGINAL_CONTENT)
+
+    @staticmethod
+    def setup_authors_file(filepath):
+        """Set up an authors file"""
+
+        with open(filepath, mode='w') as fd:
+            fd.write(AUTHORS_FILE_ORIGINAL_CONTENT)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
@@ -235,7 +244,7 @@ class TestNotes(unittest.TestCase):
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
     def test_news_update(self, mock_project, mock_utcnow):
-        """Check it it updates the news file when the flag is set"""
+        """Check if it updates the news file when the flag is set"""
 
         mock_utcnow.return_value = "2019-01-01"
 
@@ -265,6 +274,31 @@ class TestNotes(unittest.TestCase):
                 text = fd.read()
 
             self.assertEqual(text, NEWS_FILE_CONTENT)
+
+    @unittest.mock.patch('release_tools.notes.Project')
+    def test_authors_update(self, mock_project):
+        """Check if it updates the authors file when the flag is set"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            authors_file = os.path.join(fs, 'AUTHORS')
+            self.setup_unreleased_entries(changes_path)
+            self.setup_authors_file(authors_file)
+
+            mock_project.return_value.basepath = fs
+            mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.authors_file = authors_file
+
+            # Run the script command
+            result = runner.invoke(notes, ['--authors', 'release-tools', '0.8.10'])
+            self.assertEqual(result.exit_code, 0)
+
+            with open(authors_file, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, AUTHORS_FILE_CONTENT)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
@@ -298,6 +332,31 @@ class TestNotes(unittest.TestCase):
                 text = fd.read()
 
             expected = "# Releases\n\n" + RELEASE_NOTES_CONTENT
+            self.assertEqual(text, expected)
+
+    @unittest.mock.patch('release_tools.notes.Project')
+    def test_authors_empty_file(self, mock_project):
+        """Check if it creates an authors file when it does not exist"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            authors_file = os.path.join(fs, 'AUTHORS')
+            self.setup_unreleased_entries(changes_path)
+
+            mock_project.return_value.basepath = fs
+            mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.authors_file = authors_file
+
+            # Run the script command
+            result = runner.invoke(notes, ['--authors', 'release-tools', '0.8.10'])
+            self.assertEqual(result.exit_code, 0)
+
+            with open(authors_file, 'r') as fd:
+                text = fd.read()
+
+            expected = """jsmith\njdoe\n\n"""
             self.assertEqual(text, expected)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
