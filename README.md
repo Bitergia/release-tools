@@ -1,8 +1,8 @@
-# GrimoireLab Release Tools [![Build Status](https://github.com/Bitergia/release-tools/workflows/tests/badge.svg)](https://github.com/Bitergia/release-tools/actions?query=workflow:tests+branch:master+event:push) [![codecov](https://codecov.io/gh/Bitergia/release-tools/branch/master/graph/badge.svg?token=T60WC78FPR)](https://codecov.io/gh/Bitergia/release-tools)
+# Release Tools [![Build Status](https://github.com/Bitergia/release-tools/workflows/tests/badge.svg)](https://github.com/Bitergia/release-tools/actions?query=workflow:tests+branch:master+event:push) [![codecov](https://codecov.io/gh/Bitergia/release-tools/branch/master/graph/badge.svg?token=T60WC78FPR)](https://codecov.io/gh/Bitergia/release-tools)
 
-Set of tools to generate GrimoireLab releases.
+Set of tools to generate Python releases.
 
-With this package, GrimoireLab maintainers are able to automate
+With this package, Python maintainers are able to automate
 many of the boring and time consuming tasks related with
 packages and releases.
 
@@ -52,8 +52,8 @@ $ poetry install
 ## Workflow
 
 Together with these tools, this package provides an **opinionated
-way** to generate the release of a Python package. In GrimoireLab,
-we think releases must be automated and provide useful information
+way** to generate the release of a Python package. We think
+releases must be automated and provide useful information
 to end users so they can understand better the changes between
 versions. Our tools fulfill those requirements.
 

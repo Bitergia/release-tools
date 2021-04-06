@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "grimoirelab-release-tools"
-version = "0.2.0"
-description = "Set of tools to generate GrimoireLab releases."
+name = "release-tools"
+version = "0.3.0"
+description = "Set of tools to generate Python releases."
 authors = [
     "Santiago Dueñas <sduenas@bitergia.com>"
 ]
@@ -29,7 +29,7 @@ classifiers = [
 
 keywords = [
     "development",
-    "grimoirelab",
+    "build",
 ]
 
 [tool.poetry.scripts]
