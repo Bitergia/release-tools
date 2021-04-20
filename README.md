@@ -49,6 +49,11 @@ $ cd release-tools
 $ poetry install
 ```
 
+Activate the virtual environment:
+```
+$ poetry shell
+```
+
 ## Workflow
 
 Together with these tools, this package provides an **opinionated
