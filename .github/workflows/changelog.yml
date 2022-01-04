@@ -1,40 +1,12 @@
 name: Check changelog file included
 
-on: workflow_call
+on:
+  pull_request:
+    paths:
+      - 'release_tools/**'
 
 jobs:
-  valid_changelog_file:
+  check_changelog:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-            fetch-depth: 2
-
-      - name: Check changelog file added
-        run: git diff --name-only --diff-filter=A HEAD^ HEAD | grep 'releases/unreleased'
-
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-
-      - name: Install pyyaml to validate file
-        run: pip install pyyaml
-
-      - name: Validate the yaml files added
-        run: |
-          filenames=$(git diff --name-only --diff-filter=A HEAD^ HEAD | grep 'releases/unreleased')
-          echo $filenames | while read filename;
-          do
-            echo -n "$filename: "
-            if ! [ -s $filename ]; then
-              echo "Empty changelog file"
-              exit 1
-            fi
-            python -c 'import yaml, sys; yaml.safe_load(sys.stdin)' < $filename
-            if [ $? != 0 ]; then
-              echo "Invalid yaml format"
-              exit 1
-            fi
-            echo "OK"
-          done
+      - uses: bitergia/release-tools-check-changelog@master
