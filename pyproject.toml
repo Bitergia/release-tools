@@ -15,10 +15,9 @@ packages = [
 ]
 
 include = [
-    "AUTHORS",
-    "README.md",
-    "LICENSE",
-    "NEWS"
+    { path = "AUTHORS", format = "sdist" },
+    { path = "NEWS", format = "sdist" },
+    { path = "README.md", format = "sdist" },
 ]
 
 classifiers = [
