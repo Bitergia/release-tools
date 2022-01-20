@@ -46,9 +46,9 @@ class GitHandler:
 
     @property
     def root_path(self):
-        path_ = self._get_submodule_root_path()
+        basepath = self._get_submodule_root_path()
 
-        if not path_:
+        if not basepath:
             basepath = self._get_root_path()
 
         return basepath

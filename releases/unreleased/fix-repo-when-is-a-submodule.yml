@@ -1,0 +1,8 @@
+---
+title: Fix repo when is a submodule
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+  A variable was referenced before assignment
+  when the repository was a submodule.
