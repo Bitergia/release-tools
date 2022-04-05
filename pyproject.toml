@@ -38,7 +38,7 @@ notes = 'release_tools.notes:notes'
 publish = 'release_tools.publish:publish'
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 click = "^7.0"
 PyYAML = "^5.4.1"
 semver = "^2.9"
