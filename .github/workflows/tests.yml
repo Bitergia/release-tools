@@ -34,7 +34,7 @@ jobs:
           poetry run coverage report -m
           poetry run coverage xml
       - name: Send coverage report to codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           file: ./coverage.xml
           fail_ci_if_error: true
