@@ -18,8 +18,12 @@
 #
 # Authors:
 #     Santiago Dueñas <sduenas@bitergia.com>
+#     Jose Javier Merchante <jjmerchante@bitergia.com>
 #
 
+import os
+import shutil
+import subprocess
 import tempfile
 import unittest
 
@@ -33,7 +37,27 @@ REPOSITORY_ERROR = (
 )
 
 
-class TestGitHandler(unittest.TestCase):
+class TestCaseRepo(unittest.TestCase):
+    """Base class to test release-tools on a Git repo"""
+
+    repo_name = 'sample-repo'
+    submodule_name = 'sample-module'
+
+    def setUp(self):
+        self.tmp_path = tempfile.mkdtemp(prefix='release_tools_')
+        self.git_path = os.path.join(self.tmp_path, self.repo_name)
+
+        data_path = os.path.dirname(os.path.abspath(__file__))
+        data_path = os.path.join(data_path, 'data')
+        zip_path = os.path.join(data_path, self.repo_name + '.zip')
+
+        subprocess.check_call(['unzip', '-qq', zip_path, '-d', self.tmp_path])
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp_path)
+
+
+class TestGitHandler(TestCaseRepo):
     """Unit tests for GitHandler"""
 
     def test_error(self):
@@ -43,6 +67,34 @@ class TestGitHandler(unittest.TestCase):
             with self.assertRaisesRegex(RepositoryError, REPOSITORY_ERROR):
                 cmd = ['git', 'status']
                 GitHandler._exec(cmd, cwd=dirpath, env={'LANG': 'C'})
+
+    def test_root_path(self):
+        repo = GitHandler(self.git_path)
+        self.assertEqual(repo.root_path, self.git_path)
+
+    def test_root_path_submodule(self):
+        submodule_path = self.git_path + '/' + self.submodule_name
+        repo = GitHandler(submodule_path)
+        self.assertEqual(repo.root_path, submodule_path)
+
+    def test_find_file(self):
+        filename = 'README.md'
+        repo = GitHandler(self.git_path)
+        file_location = repo.find_file(filename)
+        self.assertEqual(file_location, filename)
+
+    def test_find_file_submodule(self):
+        filename = 'a'
+        submodule_path = self.git_path + '/' + self.submodule_name
+        repo = GitHandler(submodule_path)
+        file_location = repo.find_file(filename)
+        self.assertEqual(file_location, filename)
+
+    def test_find_file_missing(self):
+        filename = 'a'
+        repo = GitHandler(self.git_path)
+        file_location = repo.find_file(filename)
+        self.assertIsNone(file_location)
 
 
 if __name__ == '__main__':

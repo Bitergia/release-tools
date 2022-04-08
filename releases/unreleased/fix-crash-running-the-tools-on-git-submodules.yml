@@ -1,0 +1,7 @@
+---
+title: Fix crash running the tools on git submodules
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: 44
+notes: >
+  Release tools didn't work when the project is under a git submodule.

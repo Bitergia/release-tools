@@ -347,6 +347,8 @@ class AuthorsFileComposer:
 
         for entry_list in entries.values():
             for entry in ReleaseNotesComposer._sort_entries_by_id(entry_list):
+                if not entry.author:
+                    continue
                 if entry.author not in authors:
                     authors.append(entry.author)
 
