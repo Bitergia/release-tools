@@ -46,12 +46,9 @@ class GitHandler:
 
     @property
     def root_path(self):
-        path_ = self._get_submodule_root_path()
-
-        if not path_:
-            basepath = self._get_root_path()
-
-        return basepath
+        cmd = ['git', 'rev-parse', '--show-toplevel']
+        root_path = self._exec(cmd, cwd=self.dirpath, env=self.gitenv).strip('\n')
+        return root_path
 
     def add(self, filename):
         cmd = ['git', 'add', filename]
@@ -103,16 +100,6 @@ class GitHandler:
             return None
         else:
             return filepath.strip('\n')
-
-    def _get_root_path(self):
-        cmd = ['git', 'rev-parse', '--show-toplevel']
-        root_path = self._exec(cmd, cwd=self.dirpath, env=self.gitenv).strip('\n')
-        return root_path
-
-    def _get_submodule_root_path(self):
-        cmd = ['git', 'rev-parse', '--show-superproject-working-tree']
-        root_path = self._exec(cmd, cwd=self.dirpath, env=self.gitenv).strip('\n')
-        return root_path
 
     @staticmethod
     def _exec(cmd, cwd=None, env=None):
