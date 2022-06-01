@@ -345,7 +345,7 @@ class AuthorsFileComposer:
 
         authors = self._extract_authors(project)
 
-        for entry_list in entries.values():
+        for _, entry_list in sorted(entries.items()):
             for entry in ReleaseNotesComposer._sort_entries_by_id(entry_list):
                 if not entry.author:
                     continue
@@ -369,7 +369,8 @@ class AuthorsFileComposer:
         # Read old content
         try:
             with open(authors_file, 'r') as fd:
-                authors = fd.read().splitlines()[:-1]
+                authors = fd.read().splitlines()
+                authors = [author for author in authors if author]
         except FileNotFoundError:
             authors = []
 

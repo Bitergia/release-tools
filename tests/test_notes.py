@@ -75,6 +75,7 @@ Initial release
 NEWS_FILE_CONTENT = """# Releases\n\n""" + RELEASE_NOTES_CONTENT + NEWS_FILE_ORIGINAL_CONTENT[11:] + "\n"
 
 AUTHORS_FILE_ORIGINAL_CONTENT = """jdoe\n\n"""
+AUTHORS_FILE_ORIGINAL_CONTENT_NO_NEW_LINE = """jdoe"""
 AUTHORS_FILE_CONTENT = """jdoe\njsmith\n\n"""
 RELEASE_NOTES_FILE_ALREADY_EXISTS_ERROR = (
     "Error: Release notes for version 0.8.10 already exist. Use '--overwrite' to replace it."
@@ -160,6 +161,13 @@ class TestNotes(unittest.TestCase):
 
         with open(filepath, mode='w') as fd:
             fd.write(AUTHORS_FILE_ORIGINAL_CONTENT)
+
+    @staticmethod
+    def setup_authors_file_no_new_line(filepath):
+        """Set up an authors file"""
+
+        with open(filepath, mode='w') as fd:
+            fd.write(AUTHORS_FILE_ORIGINAL_CONTENT_NO_NEW_LINE)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
@@ -286,6 +294,31 @@ class TestNotes(unittest.TestCase):
             authors_file = os.path.join(fs, 'AUTHORS')
             self.setup_unreleased_entries(changes_path)
             self.setup_authors_file(authors_file)
+
+            mock_project.return_value.basepath = fs
+            mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.authors_file = authors_file
+
+            # Run the script command
+            result = runner.invoke(notes, ['--authors', 'release-tools', '0.8.10'])
+            self.assertEqual(result.exit_code, 0)
+
+            with open(authors_file, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, AUTHORS_FILE_CONTENT)
+
+    @unittest.mock.patch('release_tools.notes.Project')
+    def test_authors_update_no_new_line(self, mock_project):
+        """Check if it updates the authors file when the flag is set"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            authors_file = os.path.join(fs, 'AUTHORS')
+            self.setup_unreleased_entries(changes_path)
+            self.setup_authors_file_no_new_line(authors_file)
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
