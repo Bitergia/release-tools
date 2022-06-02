@@ -1,0 +1,9 @@
+---
+title: Notes command removes last author
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: 46
+notes: >
+  notes command was removing the last author from
+  the `AUTHORS` file when the file did not end with a
+  blank line.
