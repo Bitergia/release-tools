@@ -50,7 +50,10 @@ VERSION_FILE_TEMPLATE = (
 @click.command()
 @click.option('--dry-run', is_flag=True,
               help="Do not write a new version number. Print to the standard output instead.")
-def semverup(dry_run):
+@click.option('--bump-version',
+              type=click.Choice(['MAJOR', 'MINOR', 'PATCH'], case_sensitive=False),
+              help="Increase only the defined version.")
+def semverup(dry_run, bump_version):
     """Increment version number following semver specification.
 
     This script will bump up the version number of a package in a
@@ -66,10 +69,14 @@ def semverup(dry_run):
     Additionally, 'pyproject' file will also be updated. Take into
     account this file must be tracked by the repository.
 
-    WARNING: this script does not increases MAJOR version yet.
+    WARNING: this script does not increase MAJOR version yet
+    unless it is forced using --bump=major.
 
     If you don't want to create a new version and see only the final
     result, please active '--dry-run' flag.
+
+    If you want to update the version number regardless the release changes,
+    use '--bump-version=[MAJOR,MINOR,PATCH]'.
 
     More info about semver specification can be found in the next
     link: https://semver.org/.
@@ -87,7 +94,10 @@ def semverup(dry_run):
     pyproject_file = find_pyproject_file(project)
 
     # Determine the new version and produce the output
-    new_version = determine_new_version_number(project, current_version)
+    if bump_version:
+        new_version = force_new_version_number(current_version, bump_version)
+    else:
+        new_version = determine_new_version_number(project, current_version)
 
     if not dry_run:
         write_version_number(version_file, new_version)
@@ -147,6 +157,17 @@ def read_version_number(filepath):
         raise click.ClickException(msg)
 
     return version
+
+
+def force_new_version_number(current_version, bump_version):
+    """Increment version number based on bump_version choice"""
+
+    if bump_version == 'MAJOR':
+        return current_version.bump_major()
+    elif bump_version == 'MINOR':
+        return current_version.bump_minor()
+    elif bump_version == 'PATCH':
+        return current_version.bump_patch()
 
 
 def determine_new_version_number(project, current_version):

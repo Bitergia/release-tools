@@ -1,0 +1,9 @@
+---
+title: Option `--bump-version` to increase version manually
+category: added
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+  Include `--bump-version=[MAJOR, MINOR, PATCH]` argument to
+  `sermverup` command to increase the version number regardless
+  the release notes changes.
