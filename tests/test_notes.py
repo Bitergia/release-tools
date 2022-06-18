@@ -76,7 +76,7 @@ NEWS_FILE_CONTENT = """# Releases\n\n""" + RELEASE_NOTES_CONTENT + NEWS_FILE_ORI
 
 AUTHORS_FILE_ORIGINAL_CONTENT = """jdoe\n\n"""
 AUTHORS_FILE_ORIGINAL_CONTENT_NO_NEW_LINE = """jdoe"""
-AUTHORS_FILE_CONTENT = """jdoe\njsmith\n\n"""
+AUTHORS_FILE_CONTENT = """jdoe\njsmith\njwick\n\n"""
 RELEASE_NOTES_FILE_ALREADY_EXISTS_ERROR = (
     "Error: Release notes for version 0.8.10 already exist. Use '--overwrite' to replace it."
 )
@@ -121,7 +121,7 @@ class TestNotes(unittest.TestCase):
             CategoryChange.ADDED,
             CategoryChange.FIXED,
         ]
-        authors = ['jsmith', 'jdoe', 'jsmith', 'jdoe', 'jsmith']
+        authors = ['jsmith', 'jdoe', '\n- jsmith\n- jdoe\n- jwick', 'jdoe', 'jsmith']
         issues = [1, 2, 3, 'null', 'null']
         notes = [True, False, False, False, True]
         notes_txt = (
@@ -389,7 +389,7 @@ class TestNotes(unittest.TestCase):
             with open(authors_file, 'r') as fd:
                 text = fd.read()
 
-            expected = """jsmith\njdoe\n\n"""
+            expected = """jsmith\njdoe\njwick\n\n"""
             self.assertEqual(text, expected)
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')

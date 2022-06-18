@@ -345,12 +345,20 @@ class AuthorsFileComposer:
 
         authors = self._extract_authors(project)
 
+        def _check_author_exists_already(author):
+            if author not in authors:
+                authors.append(author)
+
         for _, entry_list in sorted(entries.items()):
             for entry in ReleaseNotesComposer._sort_entries_by_id(entry_list):
                 if not entry.author:
                     continue
-                if entry.author not in authors:
-                    authors.append(entry.author)
+
+                if type(entry.author) is list:
+                    for author in entry.author:
+                        _check_author_exists_already(author)
+                else:
+                    _check_author_exists_already(entry.author)
 
         content = ""
 
