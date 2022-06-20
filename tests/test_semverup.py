@@ -513,6 +513,43 @@ class TestSemVerUp(unittest.TestCase):
             lines = result.stderr.split('\n')
             self.assertEqual(lines[-2], PYPROJECT_FILE_NOT_FOUND)
 
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_force_version_number_argument(self, mock_project):
+        """Check if it increases the version number passed by argument"""
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            self.setup_files(version_file, project_file, "0.8.10")
+
+            # Run the script command for major
+            result = runner.invoke(semverup.semverup, ['--bump-version', 'major'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "1.0.0\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "1.0.0")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "1.0.0")
+
+            # Run the script command for minor
+            result = runner.invoke(semverup.semverup, ['--bump-version', 'minor'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "1.1.0\n")
+
+            # Run the script command for patch
+            result = runner.invoke(semverup.semverup, ['--bump-version', 'patch'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "1.1.1\n")
+
 
 if __name__ == '__main__':
     unittest.main()
