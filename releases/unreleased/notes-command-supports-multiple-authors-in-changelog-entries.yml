@@ -1,0 +1,14 @@
+---
+title: Notes command supports multiple authors in changelog entries
+category: added
+author:
+issue: 49
+notes: >
+    The notes command supports exporting of multiple authors
+    from the changelog entries. You can add more than one
+    author to the changelog entry by defining them as
+    ```
+    author:
+        - John Smith <jsmith@example.com>
+        - John Doe <jdoe@example.com>
+    ```
