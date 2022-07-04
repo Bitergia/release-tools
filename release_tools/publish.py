@@ -94,8 +94,8 @@ def remove_unreleased_changelog_entries(project):
     dirpath = project.unreleased_changes_path
 
     if not os.path.exists(dirpath):
-        msg = "changelog entries directory '{}' does not exist.".format(dirpath)
-        raise click.ClickException(msg)
+        click.echo("done")
+        return
 
     entries = read_changelog_entries(dirpath).keys()
 
@@ -109,7 +109,10 @@ def remove_unreleased_changelog_entries(project):
 def rollback_add_release_files(project):
     click.echo("rollback to the last consistent state")
     project.repo.restore_staged()
-    project.repo.restore_unstaged(project.unreleased_changes_path)
+    try:
+        project.repo.restore_unstaged(project.unreleased_changes_path)
+    except RepositoryError:
+        pass
 
 
 def add_release_files(project, version):
@@ -171,7 +174,10 @@ def add_release_files(project, version):
 def rollback_commit(project):
     click.echo("rollback to the last consistent state")
     project.repo.reset_head()
-    project.repo.restore_unstaged(project.unreleased_changes_path)
+    try:
+        project.repo.restore_unstaged(project.unreleased_changes_path)
+    except RepositoryError:
+        pass
 
 
 def commit(project, version, author):

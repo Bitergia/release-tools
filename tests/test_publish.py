@@ -39,9 +39,6 @@ AUTHORS_FILE_CONTENT = """jdoe\njsmith\n\n"""
 ONLY_PUSH_ERROR = (
     r"Error: '--only-push' flag must be set together with '--push'"
 )
-CHANGELOG_DIR_NOT_FOUND_ERROR = (
-    r"Error: changelog entries directory '.+' does not exist"
-)
 PYPROJECT_FILE_NOT_FOUND_ERROR = (
     r"Error: pyproject file not found"
 )
@@ -295,29 +292,44 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.push.assert_not_called()
 
     @unittest.mock.patch('release_tools.publish.Project')
-    def test_unreleased_dir_not_found_error(self, mock_project):
-        """Test if it fails when the unreleased dir is not found."""
+    def test_unreleased_dir_not_found(self, mock_project):
+        """Test if it ignores when the unreleased dir is not found."""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        files = {
+            'file1': 'content',
+            'file2': 'content',
+            'file3': 'content'
+        }
+        version_number = "0.8.10"
+
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
-            dirpath = os.path.join(fs, 'releases', 'unreleased')
-            mock_project.return_value.unreleased_changes_path = dirpath
+            version_file = os.path.join(fs, '_version.py')
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
+            notes_file = os.path.join(fs, version_number + '.md')
+            news_file = os.path.join(fs, 'NEWS')
+            authors_file = os.path.join(fs, 'AUTHORS')
+            unreleased_dir = os.path.join(fs, 'releases', 'unreleased')
+
+            self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
+
+            mock_project.return_value.unreleased_changes_path = unreleased_dir
+            mock_project.return_value.releases_path = fs
+            mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = pyproject_file
+            mock_project.return_value.news_file = news_file
+            mock_project.return_value.authors_file = authors_file
 
             # Run the command
             result = runner.invoke(publish.publish,
                                    ["0.8.10", "John Smith <jsmith@example.org>"])
-            self.assertEqual(result.exit_code, 1)
+            self.assertEqual(result.exit_code, 0)
 
-            lines = result.stderr.split('\n')
-            self.assertRegex(lines[-2], CHANGELOG_DIR_NOT_FOUND_ERROR)
-
-            # Check non called mock calls not called
-            mock_project.return_value.repo.add.assert_not_called()
-            mock_project.return_value.repo.rm.assert_not_called()
-            mock_project.return_value.repo.commit.assert_not_called()
-            mock_project.return_value.repo.tag.assert_not_called()
-            mock_project.return_value.repo.push.assert_not_called()
+            # Check called mock calls
+            mock_project.return_value.repo.add.assert_called()
+            mock_project.return_value.repo.commit.assert_called()
+            mock_project.return_value.repo.tag.assert_called()
 
     @unittest.mock.patch('release_tools.publish.read_changelog_entries')
     @unittest.mock.patch('release_tools.publish.Project')
