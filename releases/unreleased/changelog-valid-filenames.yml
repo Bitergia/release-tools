@@ -1,0 +1,9 @@
+---
+title: Changelog valid filenames
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+    Creating filename from the title could create invalid
+    paths. This commits change the way the filename is 
+    created from the title removing many of the special chars.
