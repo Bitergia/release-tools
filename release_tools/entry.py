@@ -30,6 +30,7 @@
 
 import enum
 import os
+import re
 
 import yaml
 
@@ -138,6 +139,7 @@ def determine_filepath(dirpath, title):
     """Returns the changelog entry filename."""
 
     filename = title.replace(' ', '-').lower()
+    filename = re.sub('[^a-zA-Z0-9_-]', '', filename)
     filename = filename[0:MAX_FILENAME_LENGTH - 1] + YAML_FILE_EXTENSION
     filepath = os.path.join(dirpath, filename)
 

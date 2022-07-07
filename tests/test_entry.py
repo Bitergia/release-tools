@@ -216,6 +216,15 @@ class TestDetermineFilePath(unittest.TestCase):
         filepath = determine_filepath(dirpath, "my change")
         self.assertEqual(filepath, expected)
 
+    def test_random_filepath(self):
+        """Check it the right filepath is returned"""
+
+        dirpath = "/tmp/repo/releases/unreleased/"
+        expected = os.path.join(dirpath, "releasepublish-my-custom-change.yml")
+
+        filepath = determine_filepath(dirpath, '[release/publish] My "custom" change')
+        self.assertEqual(filepath, expected)
+
 
 if __name__ == '__main__':
     unittest.main()
