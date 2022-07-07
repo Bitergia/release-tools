@@ -1,0 +1,8 @@
+---
+title: Ignore unreleased directory when publishing
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+    Publish command continues the execution if the directory
+    `releases/unreleased` doesn't exist.
