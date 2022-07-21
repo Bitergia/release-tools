@@ -1,0 +1,8 @@
+---
+title: 'Option to not cleanup on publishing'
+category: added
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+    Running `publish` with `--no-cleanup' option doesn't remove
+    any changelog entry from the repository.

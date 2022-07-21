@@ -1,0 +1,20 @@
+---
+title: Option for release candidates versions
+category: added
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+    Include a new argument to `semverup` to create pre-releases versions.
+    
+    If the option `--pre-release` is included and the current version
+    is not a release candidate, it will create a new pre-release version
+    based on files or `--bump-version` argument. If the current version
+    is a release candidate, it will increase its pre-release part. For
+    example, in a repository with a bugfix changelog entry:
+      - `0.2.0` + `semverup --pre-release` = `0.2.1-rc.1`
+      - `0.2.1-rc.1` + `semverup --pre-release` = `0.2.1-rc.2`
+    
+    When the version is a pre-release, and `--pre-release` is not specified,
+    it will remove the pre-release part and generate the final version. In a
+    repository with changelog entries:
+      -  `0.2.2-rc.1` + `semverup` = `0.2.2`

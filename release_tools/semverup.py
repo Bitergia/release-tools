@@ -53,7 +53,9 @@ VERSION_FILE_TEMPLATE = (
 @click.option('--bump-version',
               type=click.Choice(['MAJOR', 'MINOR', 'PATCH'], case_sensitive=False),
               help="Increase only the defined version.")
-def semverup(dry_run, bump_version):
+@click.option('--pre-release', is_flag=True,
+              help="Create a new release candidate version.")
+def semverup(dry_run, bump_version, pre_release):
     """Increment version number following semver specification.
 
     This script will bump up the version number of a package in a
@@ -70,13 +72,21 @@ def semverup(dry_run, bump_version):
     account this file must be tracked by the repository.
 
     WARNING: this script does not increase MAJOR version yet
-    unless it is forced using --bump=major.
+    unless it is forced using --bump-version=major.
 
     If you don't want to create a new version and see only the final
     result, please active '--dry-run' flag.
 
     If you want to update the version number regardless the release changes,
     use '--bump-version=[MAJOR,MINOR,PATCH]'.
+
+    If you want to create a release candidate, use '--pre-release'. It can be
+    combined with '--bump-version' in case you want to update the version number
+    regardless the release changes.
+
+    If the version is a release candidate and '--pre-release' is used, it will
+    increase the pre-release part of the version. If '--pre-release' is not used,
+    it will remove any pre-release metadata from the version.
 
     More info about semver specification can be found in the next
     link: https://semver.org/.
@@ -95,9 +105,9 @@ def semverup(dry_run, bump_version):
 
     # Determine the new version and produce the output
     if bump_version:
-        new_version = force_new_version_number(current_version, bump_version)
+        new_version = force_new_version_number(current_version, bump_version, pre_release)
     else:
-        new_version = determine_new_version_number(project, current_version)
+        new_version = determine_new_version_number(project, current_version, pre_release)
 
     if not dry_run:
         write_version_number(version_file, new_version)
@@ -159,21 +169,36 @@ def read_version_number(filepath):
     return version
 
 
-def force_new_version_number(current_version, bump_version):
+def force_new_version_number(current_version, bump_version, pre_release):
     """Increment version number based on bump_version choice"""
 
+    if current_version.prerelease and not pre_release:
+        return current_version.finalize_version()
+    elif current_version.prerelease and pre_release:
+        return current_version.bump_prerelease()
+
     if bump_version == 'MAJOR':
-        return current_version.bump_major()
+        next_version = current_version.bump_major()
     elif bump_version == 'MINOR':
-        return current_version.bump_minor()
+        next_version = current_version.bump_minor()
     elif bump_version == 'PATCH':
-        return current_version.bump_patch()
+        next_version = current_version.bump_patch()
+
+    if pre_release:
+        next_version = next_version.bump_prerelease()
+
+    return next_version
 
 
-def determine_new_version_number(project, current_version):
+def determine_new_version_number(project, current_version, pre_release):
     """Guess the next version number."""
 
     entries = read_unreleased_changelog_entries(project)
+
+    if current_version.prerelease and pre_release:
+        return current_version.bump_prerelease()
+    elif current_version.prerelease and not pre_release:
+        return current_version.finalize_version()
 
     bump_patch = False
     bump_minor = False
@@ -191,6 +216,8 @@ def determine_new_version_number(project, current_version):
         next_version = current_version.bump_patch()
     if bump_minor:
         next_version = current_version.bump_minor()
+    if next_version and pre_release:
+        next_version = next_version.bump_prerelease()
 
     if not next_version:
         msg = "no changes found; version number not updated"

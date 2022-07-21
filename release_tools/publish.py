@@ -44,7 +44,9 @@ from release_tools.repo import RepositoryError
 @click.option('--push', 'remote', help="Push release to the given remote.")
 @click.option('--only-push', is_flag=True,
               help="Do not generate a release commit; push the existing one.")
-def publish(version, author, remote, only_push):
+@click.option('--no-cleanup', is_flag=True,
+              help="Do not remove changelog entries from the repository.")
+def publish(version, author, remote, only_push, no_cleanup):
     """Publish a new release.
 
     This script will generate a new release in the repository.
@@ -54,12 +56,15 @@ def publish(version, author, remote, only_push):
     To run it, you will need to provide the version number and
     the author of the new release.
 
-    By default the command does not push the commit release to a
+    By default, the command does not push the commit release to a
     remote repository. To force it, use the parameter `--push`
     including the name of the remote where commits will be pushed.
 
     It is also possible to push only the commit release and its tag.
     To do so, set '--only-push' together with '--push' option.
+
+    When '--no-cleanup' argument is specified, do not remove changelog
+    entries.
 
     VERSION: version of the new release.
 
@@ -76,7 +81,8 @@ def publish(version, author, remote, only_push):
 
     try:
         if not only_push:
-            remove_unreleased_changelog_entries(project)
+            if not no_cleanup:
+                remove_unreleased_changelog_entries(project)
             add_release_files(project, version)
             commit(project, version, author)
 

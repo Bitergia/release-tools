@@ -550,6 +550,212 @@ class TestSemVerUp(unittest.TestCase):
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(result.stdout, "1.1.1\n")
 
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_entries_and_prerelease(self, mock_project):
+        """
+        Check when calling semverup with changelog entries and --pre-release,
+        a release candidate is generated
+        """
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_files(version_file, project_file, "0.8.10")
+            self.setup_unreleased_entries(dirpath, only_fixed=True)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup, args=['--pre-release'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "0.8.11-rc.1\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "0.8.11-rc.1")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "0.8.11-rc.1")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_rc_entries_and_prerelease(self, mock_project):
+        """
+        Check when calling semverup with changelog entries, --pre-release option and
+        a pre-release version number, the release candidate number is updated
+        """
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_files(version_file, project_file, "0.8.10-rc.1")
+            self.setup_unreleased_entries(dirpath, only_fixed=True)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup, args=['--pre-release'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "0.8.10-rc.2\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "0.8.10-rc.2")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "0.8.10-rc.2")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_rc_no_entries_and_prerelease(self, mock_project):
+        """
+        Check when calling semverup without changelog entries, --pre-release option and
+        a pre-release version number, the command fails
+        """
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            self.setup_files(version_file, project_file, "0.8.10-rc.1")
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup, args=['--pre-release'])
+            self.assertEqual(result.exit_code, 1)
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_force_version_prerelease(self, mock_project):
+        """
+        Check when calling semverup with --bump-version and --pre-release options,
+        a release candidate is created
+        """
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            self.setup_files(version_file, project_file, "0.8.10")
+
+            # Run the script command for major
+            result = runner.invoke(semverup.semverup, ['--bump-version', 'major', '--pre-release'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "1.0.0-rc.1\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "1.0.0-rc.1")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "1.0.0-rc.1")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_rc_force_version_prerelease(self, mock_project):
+        """
+        Check when calling semverup with --bump-version and --pre-release options, and
+        the version is a pre-release, rc's number is increased
+        """
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            self.setup_files(version_file, project_file, "1.0.0-rc.1")
+
+            # Run the script command for major
+            result = runner.invoke(semverup.semverup, ['--bump-version', 'major', '--pre-release'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "1.0.0-rc.2\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "1.0.0-rc.2")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "1.0.0-rc.2")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_remove_prerelease_part(self, mock_project):
+        """Check whether the pre-release metadata is removed when
+        '--pre-release' option is not provided"""
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_files(version_file, project_file, "0.8.10-rc.1")
+            self.setup_unreleased_entries(dirpath, only_fixed=True)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup)
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "0.8.10\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "0.8.10")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "0.8.10")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_remove_prerelease_part_force_version(self, mock_project):
+        """Check whether the pre-release metadata is removed when
+        only '--bump-version' option is provided"""
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            self.setup_files(version_file, project_file, "0.8.10-rc.1")
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup, args=['--bump-version=PATCH'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "0.8.10\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "0.8.10")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "0.8.10")
+
 
 if __name__ == '__main__':
     unittest.main()

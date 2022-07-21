@@ -122,12 +122,12 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.add.assert_called()
             mock_project.return_value.repo.rm.assert_called()
 
-            # All files where removed
+            # All files were removed
             for f in files.keys():
                 filepath = os.path.join(fs, f)
                 mock_project.return_value.repo.rm.assert_any_call(filepath)
 
-            # Version file and notes where added
+            # Version file and notes were added
             mock_project.return_value.repo.add.assert_any_call(version_file)
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
@@ -183,12 +183,12 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.add.assert_called()
             mock_project.return_value.repo.rm.assert_called()
 
-            # All files where removed
+            # All files were removed
             for f in files.keys():
                 filepath = os.path.join(fs, f)
                 mock_project.return_value.repo.rm.assert_any_call(filepath)
 
-            # Version file and notes where added
+            # Version file and notes were added
             mock_project.return_value.repo.add.assert_any_call(version_file)
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
@@ -200,7 +200,7 @@ class TestPublish(unittest.TestCase):
                                                                           "John Smith <jsmith@example.org>")
             mock_project.return_value.repo.tag.assert_called_once_with('0.8.10')
 
-            # Commit and the tag where pushed
+            # Commit and the tag were pushed
             mock_project.return_value.repo.push.assert_any_call('myremote', 'master')
             mock_project.return_value.repo.push.assert_any_call('myremote', '0.8.10')
 
@@ -608,12 +608,12 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.add.assert_called()
             mock_project.return_value.repo.rm.assert_called()
 
-            # All files where removed
+            # All files were removed
             for f in files.keys():
                 filepath = os.path.join(fs, f)
                 mock_project.return_value.repo.rm.assert_any_call(filepath)
 
-            # Version file and notes where added
+            # Version file and notes were added
             mock_project.return_value.repo.add.assert_any_call(version_file)
             mock_project.return_value.repo.add.assert_any_call(pyproject_file)
             mock_project.return_value.repo.add.assert_any_call(notes_file)
@@ -630,6 +630,61 @@ class TestPublish(unittest.TestCase):
 
             # Tag and push methods were not called
             mock_project.return_value.repo.tag.assert_not_called()
+            mock_project.return_value.repo.push.assert_not_called()
+
+    @unittest.mock.patch('release_tools.publish.read_changelog_entries')
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_publish_no_cleanup(self, mock_project, mock_read_changelog):
+        """Test if changelog entries are not removed when running with --no-cleanup."""
+
+        files = {
+            'file1': 'content',
+            'file2': 'content',
+            'file3': 'content'
+        }
+        version_number = "0.8.10"
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            pyproject_file = os.path.join(fs, 'pyproject.toml')
+            notes_file = os.path.join(fs, version_number + '.md')
+            news_file = os.path.join(fs, 'NEWS')
+            authors_file = os.path.join(fs, 'AUTHORS')
+
+            self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
+
+            mock_read_changelog.return_value = files
+            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.releases_path = fs
+            mock_project.return_value.version_file = version_file
+            mock_project.return_value.pyproject_file = pyproject_file
+            mock_project.return_value.news_file = news_file
+            mock_project.return_value.authors_file = authors_file
+
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   [version_number, "John Smith <jsmith@example.org>", '--no-cleanup'])
+            self.assertEqual(result.exit_code, 0)
+
+            # Check files weren't removed
+            mock_project.return_value.repo.add.assert_called()
+            mock_project.return_value.repo.rm.assert_not_called()
+
+            # Version file and notes were added
+            mock_project.return_value.repo.add.assert_any_call(version_file)
+            mock_project.return_value.repo.add.assert_any_call(pyproject_file)
+            mock_project.return_value.repo.add.assert_any_call(notes_file)
+            mock_project.return_value.repo.add.assert_any_call(news_file)
+            mock_project.return_value.repo.add.assert_any_call(authors_file)
+
+            # Commit and tag were only called once
+            mock_project.return_value.repo.commit.assert_called_once_with("Release " + version_number,
+                                                                          "John Smith <jsmith@example.org>")
+            mock_project.return_value.repo.tag.assert_called_once_with(version_number)
+
+            # Push method was not called
             mock_project.return_value.repo.push.assert_not_called()
 
 
