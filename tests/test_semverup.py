@@ -122,6 +122,16 @@ class TestSemVerUp(unittest.TestCase):
                 fd.write(msg)
 
     @staticmethod
+    def setup_major_entry(dirpath):
+        filepath = os.path.join(dirpath, 'changed.yml')
+
+        with open(filepath, mode='w') as fd:
+            msg = "---\ntitle: {}\ncategory: {}\n"
+            msg += "author: {}\nissue: '{}'\nnotes: null\n"
+            msg = msg.format("major change", CategoryChange.CHANGED.category, "jdoe", '4')
+            fd.write(msg)
+
+    @staticmethod
     def read_version_number(filepath):
         """Returns the version number stored in a version file"""
 
@@ -206,7 +216,7 @@ class TestSemVerUp(unittest.TestCase):
 
     @unittest.mock.patch('release_tools.semverup.Project')
     def test_patch_number_is_bumped(self, mock_project):
-        """Check whether the patch number is bumped when there are only fixing changes"""
+        """Check whether the patch number is bumped when there are only patch changes"""
 
         runner = click.testing.CliRunner()
 
@@ -237,7 +247,7 @@ class TestSemVerUp(unittest.TestCase):
 
     @unittest.mock.patch('release_tools.semverup.Project')
     def test_minor_number_is_bumped(self, mock_project):
-        """Check whether the patch number is bumped when there are mixed changes"""
+        """Check whether the minor number is bumped when there are minor and patch changes"""
 
         runner = click.testing.CliRunner(mix_stderr=False)
 
@@ -265,6 +275,70 @@ class TestSemVerUp(unittest.TestCase):
 
             version = self.read_version_number_from_pyproject(project_file)
             self.assertEqual(version, "0.9.0")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_minor_number_is_bumped_in_dev_version(self, mock_project):
+        """Check whether the minor number is bumped when there is a major change in dev version"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_files(version_file, project_file, "0.8.10")
+            self.setup_unreleased_entries(dirpath)
+            self.setup_major_entry(dirpath)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup)
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "0.9.0\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "0.9.0")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "0.9.0")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_major_number_is_bumped(self, mock_project):
+        """Check whether the major number is bumped when there is a major change"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_files(version_file, project_file, "1.8.10")
+            self.setup_unreleased_entries(dirpath)
+            self.setup_major_entry(dirpath)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup)
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "2.0.0\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "2.0.0")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "2.0.0")
 
     @unittest.mock.patch('release_tools.semverup.Project')
     def test_version_number_not_bumped_when_empty_changelog_dir(self, mock_project):

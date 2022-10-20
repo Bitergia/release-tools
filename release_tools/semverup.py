@@ -35,8 +35,7 @@ import click
 import semver
 import tomlkit.toml_file
 
-from release_tools.entry import (CategoryChange,
-                                 read_changelog_entries)
+from release_tools.entry import read_changelog_entries
 from release_tools.project import Project
 from release_tools.repo import RepositoryError
 
@@ -202,12 +201,18 @@ def determine_new_version_number(project, current_version, pre_release):
 
     bump_patch = False
     bump_minor = False
+    bump_major = False
 
     for entry in entries.values():
-        if entry.category != CategoryChange.FIXED:
-            bump_minor = True
+        if entry.category.bump_version == 'major':
+            if current_version.major == 0:
+                bump_minor = True
+            else:
+                bump_major = True
             break
-        else:
+        elif entry.category.bump_version == 'minor':
+            bump_minor = True
+        elif entry.category.bump_version == 'patch':
             bump_patch = True
 
     next_version = None
@@ -216,6 +221,8 @@ def determine_new_version_number(project, current_version, pre_release):
         next_version = current_version.bump_patch()
     if bump_minor:
         next_version = current_version.bump_minor()
+    if bump_major:
+        next_version = current_version.bump_major()
     if next_version and pre_release:
         next_version = next_version.bump_prerelease()
 
