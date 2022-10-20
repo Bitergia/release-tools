@@ -146,7 +146,8 @@ and the type of the change.
 5. Feature removal
 6. Security fix
 7. Performance improvement
-8. Other
+8. Dependency
+9. Other
 
 : 2
 ```

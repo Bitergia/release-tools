@@ -59,7 +59,8 @@ class CategoryChange(enum.Enum):
     REMOVED = (5, 'removed', 'Feature removal')
     SECURITY = (6, 'security', 'Security fix')
     PERFORMANCE = (7, 'performance', 'Performance improvement')
-    OTHER = (8, 'other', 'Other')
+    DEPENDENCY = (8, 'dependency', 'Dependencies updated')
+    OTHER = (9, 'other', 'Other')
 
     @classmethod
     def values(cls):
