@@ -59,16 +59,13 @@ jobs:
       - name: Get release tag
         id: tag
         run: |
-          echo ::set-output name=tag::${GITHUB_REF#refs/tags/}
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
       - name: Create release
-        uses: actions/create-release@v1
+        run: |
+          gh release create ${{ steps.tag.outputs.tag }} -t ${{ steps.tag.outputs.tag }} -F ./releases/${{ steps.tag.outputs.tag }}.md
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.tag.outputs.tag }}
-          release_name: ${{ steps.tag.outputs.tag }}
-          body_path: ./releases/${{ steps.tag.outputs.tag }}.md
-  
+          GITHUB_TOKEN: ${{ inputs.github-token }}
+
   publish:
     needs: [release]
     runs-on: ubuntu-latest
