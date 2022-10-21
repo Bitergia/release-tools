@@ -10,11 +10,11 @@ jobs:
         python-version: [3.7, 3.8]
     
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # 3.1.0
         with:
           fetch-depth: 10 # fetch all tags and branches
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@13ae5bb136fac2878aff31522b9efb785519f984 # v4.3.0
         with:
           python-version: ${{ matrix.python-version }}    
       - name: Install and set up Poetry
@@ -34,7 +34,7 @@ jobs:
           poetry run coverage report -m
           poetry run coverage xml
       - name: Send coverage report to codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@d9f34f8cd5cb3b3eb79b3e4b5dae3a16df499a70 # v3.1.1
         with:
           file: ./coverage.xml
           fail_ci_if_error: true
