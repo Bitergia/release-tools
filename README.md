@@ -139,17 +139,23 @@ and the type of the change.
 ```
 >> Please specify the category of your change
 
-1. New feature
-2. Bug fix
-3. Feature change
-4. New deprecation
-5. Feature removal
-6. Security fix
-7. Performance improvement
-8. Other
+1. New feature (added)
+2. Bug fix (fixed)
+3. Breaking change (changed)
+4. New deprecation (deprecated)
+5. Feature removal (removed)
+6. Security fix (security)
+7. Performance improvement (performance)
+8. Dependencies updated (dependency)
+9. Other (other)
 
 : 2
 ```
+
+Each category updates a different version number:
+- Major version: `changed` and `removed`.
+- Minor version: `added`, `deprecated`, `security`, `performance` and `other`.
+- Patch version: `fixed` and `dependency`.
 
 At the end of the process, a text editor will open to let you review
 the entry and make the final changes. The editor will be the default

@@ -57,7 +57,7 @@ class TestCategoryChange(unittest.TestCase):
 
         self.assertEqual(CategoryChange(1), CategoryChange.ADDED)
         self.assertEqual(CategoryChange(2), CategoryChange.FIXED)
-        self.assertEqual(CategoryChange(8), CategoryChange.OTHER)
+        self.assertEqual(CategoryChange(9), CategoryChange.OTHER)
 
     def test_values(self):
         """Test 'values' class method"""
@@ -65,7 +65,7 @@ class TestCategoryChange(unittest.TestCase):
         expected = [
             'added', 'fixed', 'changed',
             'deprecated', 'removed', 'security',
-            'performance', 'other'
+            'performance', 'dependency', 'other'
         ]
 
         values = CategoryChange.values()

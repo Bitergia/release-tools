@@ -46,10 +46,10 @@ INVALID_TITLE_ERROR = (
 INVALID_CATEGORY_ERROR = [
     "Error",
     r" Invalid value for \"|\'-c\"|\' / \"|\'--category\"|\'",
-    " valid options are ['added', 'fixed', 'changed', 'deprecated', 'removed', 'security', 'performance', 'other']"
+    " valid options are ['added', 'fixed', 'changed', 'deprecated', 'removed', 'security', 'performance', 'dependency', 'other']"
 ]
 INVALID_CATEGORY_INDEX_ERROR = (
-    r"Error: Invalid value for \"|\'-c\"|\' / \"|\'--category\"|\': please select an index between 1 and 8"
+    r"Error: Invalid value for \"|\'-c\"|\' / \"|\'--category\"|\': please select an index between 1 and 9"
 )
 MOCK_OS_ERROR = (
     "Error: Unable to create directory. mock os error"

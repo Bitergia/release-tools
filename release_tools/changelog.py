@@ -63,7 +63,8 @@ def category_prompt():
     """Prompt category to read the type of a change"""
 
     prompt_msg = ">> Please specify the category of your change\n\n"
-    prompt_msg += "\n".join(["{}. {}".format(cat.value, cat.title) for cat in CategoryChange])
+    prompt_msg += "\n".join(["{}. {} ({})".format(cat.value, cat.title, cat.category)
+                             for cat in CategoryChange])
     prompt_msg += "\n\n"
     return prompt_msg
 

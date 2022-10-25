@@ -45,21 +45,23 @@ MAX_FILENAME_LENGTH = 99 - len(YAML_FILE_EXTENSION)
 class CategoryChange(enum.Enum):
     """Possible category types."""
 
-    def __new__(cls, value, category, title):
+    def __new__(cls, value, category, title, bump_version):
         obj = object.__new__(cls)
         obj._value_ = value
         obj.category = category
         obj.title = title
+        obj.bump_version = bump_version
         return obj
 
-    ADDED = (1, 'added', 'New feature')
-    FIXED = (2, 'fixed', 'Bug fix')
-    CHANGED = (3, 'changed', 'Feature change')
-    DEPRECATED = (4, 'deprecated', 'New deprecation')
-    REMOVED = (5, 'removed', 'Feature removal')
-    SECURITY = (6, 'security', 'Security fix')
-    PERFORMANCE = (7, 'performance', 'Performance improvement')
-    OTHER = (8, 'other', 'Other')
+    ADDED = (1, 'added', 'New feature', 'minor')
+    FIXED = (2, 'fixed', 'Bug fix', 'patch')
+    CHANGED = (3, 'changed', 'Breaking change', 'major')
+    DEPRECATED = (4, 'deprecated', 'New deprecation', 'minor')
+    REMOVED = (5, 'removed', 'Feature removal', 'major')
+    SECURITY = (6, 'security', 'Security fix', 'minor')
+    PERFORMANCE = (7, 'performance', 'Performance improvement', 'minor')
+    DEPENDENCY = (8, 'dependency', 'Dependencies updated', 'patch')
+    OTHER = (9, 'other', 'Other', 'minor')
 
     @classmethod
     def values(cls):

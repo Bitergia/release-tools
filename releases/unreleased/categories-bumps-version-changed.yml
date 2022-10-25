@@ -1,0 +1,14 @@
+---
+title: New categories definition
+category: changed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: 55
+notes: >
+    Previously, only the `fixed` notes incremented the `patch` version, and the other changes
+    incremented MINOR. We updated this behavior.
+
+    From now on, `changed` and `removed` entries increment major version.
+    `added`, `deprecated`, `security`, `performance` and `other` increment
+    the minor version. `Fixed` and `dependency` increment the patch version.
+
+    If the version is 0.x.x new entries will upgrade minor version at most.
