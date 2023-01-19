@@ -96,6 +96,14 @@ class TestGitHandler(TestCaseRepo):
         file_location = repo.find_file(filename)
         self.assertIsNone(file_location)
 
+    def test_mv_file(self):
+        filename = 'README.md'
+        dest_path = 'README_2.md'
+        repo = GitHandler(self.git_path)
+        repo.mv(filename, dest_path)
+        location_dest = os.path.join(self.git_path, dest_path)
+        self.assertTrue(os.path.exists(location_dest))
+
 
 if __name__ == '__main__':
     unittest.main()

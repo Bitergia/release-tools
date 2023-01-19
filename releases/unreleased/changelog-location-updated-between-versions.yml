@@ -1,0 +1,10 @@
+---
+title: Generate release notes for pre-releases
+category: added
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: |
+  The flag `--pre-release`, on the command `notes`, generates the notes
+  of a release candidate. Release notes include the changes in between
+  releases - regular and candidate releases - while the release candidate
+  notes only include the latest changes since the previous release.

@@ -32,6 +32,7 @@ VERSION_FILENAME = '_version.py'
 
 RELEASES_DIRNAME = 'releases'
 UNRELEASED_CHANGES_DIRNAME = 'unreleased'
+UNRELEASED_ENTRIES_PROCESSED = 'processed'
 
 
 class Project:
@@ -84,3 +85,9 @@ class Project:
         """Path where the unreleased changes entries are stored."""
 
         return os.path.join(self.releases_path, UNRELEASED_CHANGES_DIRNAME)
+
+    @property
+    def unreleased_processed_entries_path(self):
+        """Path where processed unreleased changes entries are stored."""
+
+        return os.path.join(self.unreleased_changes_path, UNRELEASED_ENTRIES_PROCESSED)

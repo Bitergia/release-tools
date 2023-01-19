@@ -67,6 +67,18 @@ class TestProject(unittest.TestCase):
 
     @unittest.mock.patch('release_tools.project.GitHandler.root_path',
                          new_callable=unittest.mock.PropertyMock)
+    def test_unreleased_processed_entries_path(self, mock_root_path):
+        """Check if the property returns the path to the unreleased processed changes"""
+
+        mock_root_path.return_value = "/tmp/repo/"
+
+        project = Project('/tmp/repo/')
+
+        expected = "/tmp/repo/releases/unreleased/processed"
+        self.assertEqual(project.unreleased_processed_entries_path, expected)
+
+    @unittest.mock.patch('release_tools.project.GitHandler.root_path',
+                         new_callable=unittest.mock.PropertyMock)
     def test_news_file(self, mock_root_path):
         """Check if the property returns the news file path"""
 

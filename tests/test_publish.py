@@ -106,7 +106,7 @@ class TestPublish(unittest.TestCase):
             self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
@@ -166,7 +166,7 @@ class TestPublish(unittest.TestCase):
             self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
@@ -315,6 +315,7 @@ class TestPublish(unittest.TestCase):
             self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_project.return_value.unreleased_changes_path = unreleased_dir
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(unreleased_dir, 'processed')
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
@@ -348,7 +349,7 @@ class TestPublish(unittest.TestCase):
             pyproject_file = os.path.join(fs, 'pyproject.toml')
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = None
             mock_project.return_value.pyproject_file = pyproject_file
@@ -391,7 +392,7 @@ class TestPublish(unittest.TestCase):
             version_file = os.path.join(fs, '_version.py')
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = None
@@ -435,7 +436,7 @@ class TestPublish(unittest.TestCase):
             pyproject_file = os.path.join(fs, 'pyproject.toml')
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
@@ -481,7 +482,7 @@ class TestPublish(unittest.TestCase):
             notes_file = os.path.join(fs, '0.8.10.md')
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
@@ -531,7 +532,7 @@ class TestPublish(unittest.TestCase):
             notes_file = os.path.join(fs, '0.8.10.md')
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
@@ -586,7 +587,7 @@ class TestPublish(unittest.TestCase):
             self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file
@@ -656,7 +657,7 @@ class TestPublish(unittest.TestCase):
             self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
 
             mock_read_changelog.return_value = files
-            mock_project.return_value.unreleased_changes_path = fs
+            mock_project.return_value.unreleased_processed_entries_path = fs
             mock_project.return_value.releases_path = fs
             mock_project.return_value.version_file = version_file
             mock_project.return_value.pyproject_file = pyproject_file

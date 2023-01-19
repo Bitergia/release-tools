@@ -23,6 +23,7 @@
 
 import datetime
 import os
+import shutil
 import unittest
 import unittest.mock
 
@@ -180,12 +181,15 @@ class TestNotes(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
+            processed_changes_path = os.path.join(changes_path, 'processed')
             news_file = os.path.join(fs, 'NEWS')
             self.setup_unreleased_entries(changes_path)
             self.setup_news_file(news_file)
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = processed_changes_path
+            mock_project.return_value.repo.mv = os.rename
 
             # Run the script command
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
@@ -201,6 +205,9 @@ class TestNotes(unittest.TestCase):
                 text = fd.read()
 
             self.assertEqual(text, NEWS_FILE_ORIGINAL_CONTENT)
+
+            self.assertListEqual(sorted(os.listdir(processed_changes_path)),
+                                 ['0.yml', '1.yml', '2.yml', '3.yml', '4.yml'])
 
     @unittest.mock.patch('release_tools.changelog.Project')
     def test_entry_repository_error(self, mock_project):
@@ -227,7 +234,7 @@ class TestNotes(unittest.TestCase):
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
     def test_dry_run(self, mock_project, mock_utcnow):
-        """Check if it composes the release notes but does not create a file"""
+        """Check if it composes the release notes but does not create a file and does not move the changelogs"""
 
         mock_utcnow.return_value = "2019-01-01"
 
@@ -235,10 +242,13 @@ class TestNotes(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
+            processed_changes_path = os.path.join(changes_path, 'processed')
             self.setup_unreleased_entries(changes_path)
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = processed_changes_path
+            mock_project.return_value.repo.mv = os.rename
 
             # Run the script command
             result = runner.invoke(notes, ['--dry-run', 'release-tools', '0.8.10'])
@@ -248,6 +258,10 @@ class TestNotes(unittest.TestCase):
             self.assertEqual(os.path.exists(filepath), False)
 
             self.assertEqual(result.stdout, RELEASE_NOTES_CONTENT + '\n')
+
+            self.assertFalse(os.path.exists(path=processed_changes_path))
+            self.assertListEqual(sorted(os.listdir(changes_path)),
+                                 ['0.yml', '1.yml', '2.yml', '3.yml', '4.yml'])
 
     @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
     @unittest.mock.patch('release_tools.notes.Project')
@@ -266,6 +280,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
             mock_project.return_value.news_file = news_file
 
             # Run the script command
@@ -297,6 +312,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
             mock_project.return_value.authors_file = authors_file
 
             # Run the script command
@@ -322,6 +338,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
             mock_project.return_value.authors_file = authors_file
 
             # Run the script command
@@ -349,6 +366,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
             mock_project.return_value.news_file = news_file
 
             # Run the script command
@@ -380,6 +398,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
             mock_project.return_value.authors_file = authors_file
 
             # Run the script command
@@ -407,6 +426,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
 
             # Run the script command
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
@@ -429,19 +449,24 @@ class TestNotes(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
+            processed_changes_path = os.path.join(changes_path, 'processed')
             self.setup_unreleased_entries(changes_path)
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = processed_changes_path
+            mock_project.return_value.repo.mv = os.rename
 
             # Create a file first
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
             self.assertEqual(result.exit_code, 0)
 
+            # Files should be in unreleased/processed directory
+            self.assertListEqual(sorted(os.listdir(processed_changes_path)),
+                                 ['0.yml', '1.yml', '2.yml', '3.yml', '4.yml'])
+
             # Try to replace it with an empty version
-            for filename in os.listdir(changes_path):
-                filepath = os.path.join(changes_path, filename)
-                os.remove(filepath)
+            shutil.rmtree(processed_changes_path)
 
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
             self.assertEqual(result.exit_code, 1)
@@ -467,19 +492,20 @@ class TestNotes(unittest.TestCase):
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
+            processed_changes_path = os.path.join(changes_path, 'processed')
             self.setup_unreleased_entries(changes_path)
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = processed_changes_path
+            mock_project.return_value.repo.mv = os.rename
 
             # Create a file first
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
             self.assertEqual(result.exit_code, 0)
 
             # Try to replace it with an empty version
-            for filename in os.listdir(changes_path):
-                filepath = os.path.join(changes_path, filename)
-                os.remove(filepath)
+            shutil.rmtree(processed_changes_path)
 
             result = runner.invoke(notes, ['--overwrite', 'release-tools', '0.8.10'])
             self.assertEqual(result.exit_code, 0)
@@ -503,6 +529,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
 
             # Force to return an empty content
             mock_compose.return_value = ""
@@ -526,6 +553,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
 
             # Force to return an error when reading the entries
             mock_read_entries.side_effect = Exception("Invalid changelog entry format")
@@ -547,6 +575,7 @@ class TestNotes(unittest.TestCase):
 
             mock_project.return_value.basepath = fs
             mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(changes_path, 'processed')
 
             # Run the script command
             result = runner.invoke(notes, ['release-tools', '0.8.10'])
@@ -554,6 +583,53 @@ class TestNotes(unittest.TestCase):
 
             lines = result.stderr.split('\n')
             self.assertRegex(lines[-2], CHANGELOG_DIR_NOT_FOUND_ERROR)
+
+    @unittest.mock.patch('release_tools.notes.ReleaseNotesComposer._datetime_utcnow_str')
+    @unittest.mock.patch('release_tools.notes.Project')
+    def test_pre_release_notes_empty(self, mock_project, mock_utcnow):
+        """Check whether running with pre-release after running notes returns empty notes"""
+
+        mock_utcnow.return_value = "2019-01-01"
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            changes_path = os.path.join(fs, 'releases', 'unreleased')
+            processed_changes_path = os.path.join(changes_path, 'processed')
+            self.setup_unreleased_entries(changes_path)
+
+            mock_project.return_value.basepath = fs
+            mock_project.return_value.unreleased_changes_path = changes_path
+            mock_project.return_value.unreleased_processed_entries_path = processed_changes_path
+            mock_project.return_value.repo.mv = os.rename
+
+            # Create a file first
+            result = runner.invoke(notes, ['release-tools', '0.8.9'])
+            self.assertEqual(result.exit_code, 0)
+
+            # Files should be in unreleased/processed directory and unreleased only have 'processed'
+            self.assertListEqual(sorted(os.listdir(processed_changes_path)),
+                                 ['0.yml', '1.yml', '2.yml', '3.yml', '4.yml'])
+            self.assertListEqual(os.listdir(changes_path), ['processed'])
+
+            result = runner.invoke(notes, ['release-tools', '0.8.10', '--pre-release'])
+            self.assertEqual(result.exit_code, 0)
+
+            filepath = os.path.join(fs, 'releases', '0.8.10.md')
+            with open(filepath, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, RELEASE_NOTES_EMPTY)
+
+            # Running again without --pre-release should contain the processed notes
+            result = runner.invoke(notes, ['release-tools', '0.8.10', '--overwrite'])
+            self.assertEqual(result.exit_code, 0)
+
+            filepath = os.path.join(fs, 'releases', '0.8.10.md')
+            with open(filepath, 'r') as fd:
+                text = fd.read()
+
+            self.assertEqual(text, RELEASE_NOTES_CONTENT)
 
     @unittest.mock.patch('release_tools.notes.datetime')
     def test_datetime_utcnow_str(self, mock_datetime):
