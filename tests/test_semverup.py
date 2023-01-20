@@ -27,6 +27,7 @@ import unittest
 import unittest.mock
 
 import click.testing
+import semver
 import tomlkit.toml_file
 
 from release_tools import semverup
@@ -674,6 +675,7 @@ class TestSemVerUp(unittest.TestCase):
 
             dirpath = os.path.join(fs, 'releases', 'unreleased')
             mock_project.return_value.unreleased_changes_path = dirpath
+            mock_project.return_value.unreleased_processed_entries_path = os.path.join(dirpath, 'processed')
 
             self.setup_files(version_file, project_file, "0.8.10-rc.1")
             self.setup_unreleased_entries(dirpath, only_fixed=True)
@@ -829,6 +831,53 @@ class TestSemVerUp(unittest.TestCase):
 
             version = self.read_version_number_from_pyproject(project_file)
             self.assertEqual(version, "0.8.10")
+
+    def test_get_next_version(self):
+        """Check multiple version changes based on inputs"""
+
+        # arg__version, arg_bump_version, arg_prerelease, expected
+        test_cases = [
+            ('1.1.3', 'PATCH', False, '1.1.4'),
+            ('1.1.3', 'MINOR', False, '1.2.0'),
+            ('1.1.3', 'MAJOR', False, '2.0.0'),
+            ('0.0.1', 'PATCH', True, '0.0.2-rc.1'),
+            ('0.0.1', 'MINOR', True, '0.1.0-rc.1'),
+            ('0.0.1', 'MAJOR', True, '1.0.0-rc.1'),
+            ('0.1.0', 'PATCH', True, '0.1.1-rc.1'),
+            ('0.1.0', 'MINOR', True, '0.2.0-rc.1'),
+            ('0.1.0', 'MAJOR', True, '1.0.0-rc.1'),
+            ('1.0.2-rc.1', 'PATCH', True, '1.0.2-rc.2'),
+            ('1.0.2-rc.1', 'MINOR', True, '1.1.0-rc.1'),
+            ('1.0.2-rc.1', 'MAJOR', True, '2.0.0-rc.1'),
+            ('1.2.0-rc.1', 'PATCH', True, '1.2.0-rc.2'),
+            ('1.2.0-rc.1', 'MINOR', True, '1.2.0-rc.2'),
+            ('1.2.0-rc.1', 'MAJOR', True, '2.0.0-rc.1'),
+            ('1.0.0-rc.1', 'PATCH', True, '1.0.0-rc.2'),
+            ('1.0.0-rc.1', 'MINOR', True, '1.0.0-rc.2'),
+            ('1.0.0-rc.1', 'MAJOR', True, '1.0.0-rc.2'),
+            ('1.1.0-rc.1', 'PATCH', False, '1.1.0'),
+            ('1.1.0-rc.1', 'MINOR', False, '1.1.0'),
+            ('1.1.0-rc.1', 'MAJOR', False, '2.0.0'),
+            ('1.1.0-rc.1', None, False, '1.1.0'),
+        ]
+        tests_no_changes = [
+            ('1.1.0', None, True),
+            ('1.1.3', None, False),
+            ('1.1.0-rc.1', None, True),
+        ]
+        for case in test_cases:
+            in_version = semver.VersionInfo.parse(case[0])
+            version = semverup.get_next_version(current_version=in_version,
+                                                bump_version=case[1],
+                                                do_prerelease=case[2])
+            self.assertEqual(str(version), case[3])
+
+        for case in tests_no_changes:
+            with self.assertRaisesRegex(click.ClickException, "no changes found; version number not updated"):
+                in_version = semver.VersionInfo.parse(case[0])
+                _ = semverup.get_next_version(current_version=in_version,
+                                              bump_version=case[1],
+                                              do_prerelease=case[2])
 
 
 if __name__ == '__main__':
