@@ -61,9 +61,11 @@ def validate_argument(ctx, param, value):
               help="Update NEWS file with the release notes.")
 @click.option('--authors', is_flag=True,
               help="Update AUTHORS file with the release notes.")
+@click.option('--pre-release', is_flag=True,
+              help="Create pre-release notes; ignores notes from previous release candidates.")
 @click.argument('name', callback=validate_argument)
 @click.argument('version', callback=validate_argument)
-def notes(name, version, dry_run, overwrite, news, authors):
+def notes(name, version, dry_run, overwrite, news, authors, pre_release):
     """Generate release notes.
 
     When you run this script, it will generate the release notes of the
@@ -74,6 +76,11 @@ def notes(name, version, dry_run, overwrite, news, authors):
     under the 'releases' directory. Take into account the argument `NAME`
     is only used as the title of the document.
 
+    Changelog entries included in the release notes are moved to a new
+    directory in 'unreleased/processed'. If you are running multiple
+    release candidates, and you don't want to include the same notes in
+    successive calls to notes, use the flag '--pre-release'.
+
     If you also want to add the content of these release notes to the NEWS
     file, use the flag `--news`.
 
@@ -83,7 +90,8 @@ def notes(name, version, dry_run, overwrite, news, authors):
     In the case a release notes file for the same version already exists,
     an error will be raised. Use '--overwrite' to force to replace the
     existing file. If you just want to see the final result of the notes
-    but not generate a new file, please activate '--dry-run' flag.
+    but not generate a new file, and not move the changelogs processed,
+    please activate '--dry-run' flag.
 
     NAME: title of the package for the release notes.
 
@@ -94,7 +102,7 @@ def notes(name, version, dry_run, overwrite, news, authors):
     except RepositoryError as e:
         raise click.ClickException(e)
 
-    entry_list = read_unreleased_changelog_entries(project)
+    entry_list = read_unreleased_changelog_entries(project, pre_release)
 
     md = compose_release_notes(name, version, entry_list)
 
@@ -103,13 +111,14 @@ def notes(name, version, dry_run, overwrite, news, authors):
     else:
         write_release_notes(project, version, md,
                             overwrite=overwrite, news=news)
+        move_processed_unreleased_entries(project)
 
     if authors:
         au_content = compose_author_content(project, entry_list)
         write_authors_file(project, au_content)
 
 
-def read_unreleased_changelog_entries(project):
+def read_unreleased_changelog_entries(project, pre_release):
     """Import changelog entries to include in the notes."""
 
     dirpath = project.unreleased_changes_path
@@ -122,6 +131,12 @@ def read_unreleased_changelog_entries(project):
         entries = read_changelog_entries(dirpath)
     except Exception as exc:
         raise click.ClickException(exc)
+
+    if not pre_release:
+        dirpath = project.unreleased_processed_entries_path
+        if os.path.exists(dirpath):
+            new_entries = read_changelog_entries(dirpath)
+            entries.update(new_entries)
 
     entries = organize_entries_by_category(entries)
 
@@ -228,6 +243,24 @@ def update_news_file(project, version, content):
             fd.write("\n{}\n\n".format(original_content))
 
     click.echo("News file updated to {}".format(version))
+
+
+def move_processed_unreleased_entries(project):
+    """Move processed entries to a new directory for future release notes"""
+
+    src_dirpath = project.unreleased_changes_path
+    dest_dirpath = project.unreleased_processed_entries_path
+
+    try:
+        os.makedirs(dest_dirpath, mode=0o755)
+    except FileExistsError:
+        pass
+
+    for filename in os.listdir(src_dirpath):
+        if filename.endswith('.yml'):
+            src_filepath = os.path.join(src_dirpath, filename)
+            dest_filepath = os.path.join(dest_dirpath, filename)
+            project.repo.mv(src_filepath, dest_filepath)
 
 
 def determine_release_notes_filepath(project, version):

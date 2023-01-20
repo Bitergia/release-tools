@@ -97,7 +97,7 @@ def remove_unreleased_changelog_entries(project):
 
     click.echo("Cleaning directories...", nl=False)
 
-    dirpath = project.unreleased_changes_path
+    dirpath = project.unreleased_processed_entries_path
 
     if not os.path.exists(dirpath):
         click.echo("done")

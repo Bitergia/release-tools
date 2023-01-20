@@ -82,6 +82,10 @@ class GitHandler:
         cmd = ['git', 'restore', dirpath]
         self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
 
+    def mv(self, srcpath, destpath):
+        cmd = ['git', 'mv', srcpath, destpath]
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
     def find_file(self, filename):
         """Find a file in the repository.
 

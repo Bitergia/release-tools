@@ -219,6 +219,11 @@ $ notes "MyApp" 0.2.0
 Release notes file '0.2.0.md' created
 ```
 
+Changelog entries included in the release notes are moved to a new
+directory in 'unreleased/processed'. If you are running multiple
+release candidates, and you don't want to include the same notes in
+successive release candidates, use the flag '--pre-release'.
+
 If you also want to add the content of these release notes to the `NEWS`
 file, use the flag `--news`.
 
