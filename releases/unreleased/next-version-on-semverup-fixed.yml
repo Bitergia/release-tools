@@ -1,0 +1,11 @@
+---
+title: Invalid release candidate version number when adding new changes
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: |
+  `semverup` was not increasing the correct version number
+  when the old version was a release candidate and a new
+  changelog was included. Before it increased `0.0.5-rc.1`
+  to `0.0.5-rc.2` when a minor changelog entry was added
+  while it should be `0.1.0-rc.1`.

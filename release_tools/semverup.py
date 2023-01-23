@@ -104,7 +104,7 @@ def semverup(dry_run, bump_version, pre_release):
 
     # Determine the new version and produce the output
     if bump_version:
-        new_version = force_new_version_number(current_version, bump_version, pre_release)
+        new_version = get_next_version(current_version, bump_version, pre_release)
     else:
         new_version = determine_new_version_number(project, current_version, pre_release)
 
@@ -168,36 +168,76 @@ def read_version_number(filepath):
     return version
 
 
-def force_new_version_number(current_version, bump_version, pre_release):
-    """Increment version number based on bump_version choice"""
+def get_next_version(current_version, bump_version, do_prerelease=False):
+    """Increment version number based on bump_version choice and do_prerelease"""
 
-    if current_version.prerelease and not pre_release:
-        return current_version.finalize_version()
-    elif current_version.prerelease and pre_release:
-        return current_version.bump_prerelease()
+    if current_version.prerelease:
+        next_version = _get_next_version_from_prerelease(current_version, bump_version, do_prerelease)
+    else:
+        next_version = _get_next_version_from_final_release(current_version, bump_version, do_prerelease)
 
-    if bump_version == 'MAJOR':
-        next_version = current_version.bump_major()
-    elif bump_version == 'MINOR':
+    if not next_version:
+        msg = "no changes found; version number not updated"
+        raise click.ClickException(msg)
+
+    return next_version
+
+
+def _get_next_version_from_prerelease(current_version, bump_version, do_prerelease):
+    """Determine the next version number when the current version is a release candidate"""
+
+    next_version = None
+
+    if bump_version == 'MINOR' and current_version.patch != 0:
+        # 0.1.1-rc.2 >> 0.2.0(-rc.1)
         next_version = current_version.bump_minor()
-    elif bump_version == 'PATCH':
-        next_version = current_version.bump_patch()
+    elif bump_version == 'MAJOR' and (current_version.minor != 0 or current_version.patch != 0):
+        # 0.1.0-rc.2 >> 1.0.0(-rc.1)
+        next_version = current_version.bump_major()
 
-    if pre_release:
+    if do_prerelease:
+        if next_version:
+            # New version and do prerelease
+            next_version = next_version.bump_prerelease()
+        elif bump_version:
+            # e.g. 0.2.0-rc.1 and minor changelog and do prerelease >> 0.2.0-rc.2
+            next_version = current_version.bump_prerelease()
+    else:
+        # Remove prerelease metadata from the version
+        if next_version:
+            next_version = next_version.finalize_version()
+        else:
+            next_version = current_version.finalize_version()
+
+    return next_version
+
+
+def _get_next_version_from_final_release(current_version, bump_version, do_prerelease):
+    """Determine the next version number when the current version is a final release"""
+
+    next_version = None
+
+    if bump_version == 'PATCH':
+        # 0.2.0 >> 0.2.1
+        next_version = current_version.bump_patch()
+    elif bump_version == 'MINOR':
+        # 0.2.0 >> 0.3.0
+        next_version = current_version.bump_minor()
+    elif bump_version == 'MAJOR':
+        # 0.2.0 >> 1.0.0
+        next_version = current_version.bump_major()
+
+    if next_version and do_prerelease:
+        # 0.2.1 >> 0.2.1-rc.1
         next_version = next_version.bump_prerelease()
 
     return next_version
 
 
-def determine_new_version_number(project, current_version, pre_release):
+def determine_new_version_number(project, current_version, prerelease):
     """Guess the next version number."""
 
     entries = read_unreleased_changelog_entries(project)
-
-    if current_version.prerelease and pre_release:
-        return current_version.bump_prerelease()
-    elif current_version.prerelease and not pre_release:
-        return current_version.finalize_version()
 
     bump_patch = False
     bump_minor = False
@@ -215,16 +255,16 @@ def determine_new_version_number(project, current_version, pre_release):
         elif entry.category.bump_version == 'patch':
             bump_patch = True
 
-    next_version = None
-
-    if bump_patch:
-        next_version = current_version.bump_patch()
-    if bump_minor:
-        next_version = current_version.bump_minor()
     if bump_major:
-        next_version = current_version.bump_major()
-    if next_version and pre_release:
-        next_version = next_version.bump_prerelease()
+        bump_version = 'MAJOR'
+    elif bump_minor:
+        bump_version = 'MINOR'
+    elif bump_patch:
+        bump_version = 'PATCH'
+    else:
+        bump_version = None
+
+    next_version = get_next_version(current_version, bump_version, prerelease)
 
     if not next_version:
         msg = "no changes found; version number not updated"
