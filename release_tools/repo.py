@@ -55,7 +55,7 @@ class GitHandler:
         self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
 
     def rm(self, filename):
-        cmd = ['git', 'rm', filename]
+        cmd = ['git', 'rm', '-f', filename]
         self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
 
     def tag(self, version):
