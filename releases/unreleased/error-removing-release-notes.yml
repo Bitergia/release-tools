@@ -1,0 +1,8 @@
+---
+title: Error removing changelog entries
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+  Changelog entries that are processed while doing a release that
+  is not a release candidate were raising a Git error.
