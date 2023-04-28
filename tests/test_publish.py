@@ -688,6 +688,24 @@ class TestPublish(unittest.TestCase):
             # Push method was not called
             mock_project.return_value.repo.push.assert_not_called()
 
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_publish_different_branch(self, mock_project):
+        """Test when '--remote-branch' is defined with a branch different from master."""
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   ["--push", "myremote", "--only-push",
+                                    "--remote-branch", "main",
+                                    "0.8.10", "John Smith <jsmith@example.org>"])
+            self.assertEqual(result.exit_code, 0)
+
+            # Commit and the tag were pushed and branch main
+            mock_project.return_value.repo.push.assert_any_call('myremote', 'main')
+            mock_project.return_value.repo.push.assert_any_call('myremote', '0.8.10')
+
 
 if __name__ == '__main__':
     unittest.main()

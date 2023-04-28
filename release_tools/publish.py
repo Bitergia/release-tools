@@ -46,7 +46,9 @@ from release_tools.repo import RepositoryError
               help="Do not generate a release commit; push the existing one.")
 @click.option('--no-cleanup', is_flag=True,
               help="Do not remove changelog entries from the repository.")
-def publish(version, author, remote, only_push, no_cleanup):
+@click.option('--remote-branch', 'remote_branch', default="master",
+              help="Remote branch to push. Default 'master'.")
+def publish(version, author, remote, only_push, no_cleanup, remote_branch):
     """Publish a new release.
 
     This script will generate a new release in the repository.
@@ -62,6 +64,9 @@ def publish(version, author, remote, only_push, no_cleanup):
 
     It is also possible to push only the commit release and its tag.
     To do so, set '--only-push' together with '--push' option.
+
+    To push into a different branch than `master` use the
+    `--remote-branch' option.
 
     When '--no-cleanup' argument is specified, do not remove changelog
     entries.
@@ -87,7 +92,7 @@ def publish(version, author, remote, only_push, no_cleanup):
             commit(project, version, author)
 
         if remote:
-            push(project, remote, version)
+            push(project, remote, version, remote_branch)
     except RepositoryError as e:
         raise click.ClickException(e)
 
@@ -202,12 +207,12 @@ def commit(project, version, author):
     click.echo("done")
 
 
-def push(project, remote, release_tag):
+def push(project, remote, release_tag, branch="master"):
     """Publish the release in the given remote repository."""
 
     click.echo("Publishing release in {}...".format(remote), nl=False)
 
-    project.repo.push(remote, 'master')
+    project.repo.push(remote, branch)
     project.repo.push(remote, release_tag)
 
     click.echo("done")
