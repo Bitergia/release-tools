@@ -1,0 +1,8 @@
+---
+title: Option to include branch in `publish` command
+category: fixed
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+  Include the `--remote-branch <branch>` option in `publish` to push
+  to a specific remote branch. By default it is `master`.
