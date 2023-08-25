@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "release-tools"
-version = "0.5.0"
+version = "0.6.0-rc.1"
 description = "Set of tools to generate Python releases."
 authors = [
     "Santiago Dueñas <sduenas@bitergia.com>"
