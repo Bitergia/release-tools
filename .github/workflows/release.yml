@@ -64,7 +64,7 @@ jobs:
         run: |
           gh release create ${{ steps.tag.outputs.tag }} -t ${{ steps.tag.outputs.tag }} -F ./releases/${{ steps.tag.outputs.tag }}.md
         env:
-          GITHUB_TOKEN: ${{ inputs.github-token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     needs: [release]
