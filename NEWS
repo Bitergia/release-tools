@@ -1,5 +1,79 @@
 # Releases
 
+## Release Tools 0.6.0 - (2023-08-25)
+
+**New features:**
+
+ * Notes command supports multiple authors in changelog entries (#49)\
+   The notes command supports exporting of multiple authors from the
+   changelog entries. You can add more than one author to the changelog
+   entry by defining them as ``` author:     - John Smith
+   <jsmith@example.com>     - John Doe <jdoe@example.com> ```
+ * Option `--bump-version` to increase version manually\
+   Include `--bump-version=[MAJOR, MINOR, PATCH]` argument to `sermverup`
+   command to increase the version number regardless the release notes
+   changes.
+ * Generate release notes for pre-releases\
+   The flag `--pre-release`, on the command `notes`, generates the notes
+   of a release candidate. Release notes include the changes in between
+   releases - regular and candidate releases - while the release
+   candidate notes only include the latest changes since the previous
+   release.
+ * Option to not cleanup on publishing\
+   Running `publish` with `--no-cleanup' option doesn't remove any
+   changelog entry from the repository.
+ * Option for release candidates versions\
+   Include a new argument to `semverup` to create pre-releases versions.
+   If the option `--pre-release` is included and the current version is
+   not a release candidate, it will create a new pre-release version
+   based on files or `--bump-version` argument. If the current version is
+   a release candidate, it will increase its pre-release part. For
+   example, in a repository with a bugfix changelog entry:   - `0.2.0` +
+   `semverup --pre-release` = `0.2.1-rc.1`   - `0.2.1-rc.1` + `semverup
+   --pre-release` = `0.2.1-rc.2`  When the version is a pre-release, and
+   `--pre-release` is not specified, it will remove the pre-release part
+   and generate the final version. In a repository with changelog
+   entries:   -  `0.2.2-rc.1` + `semverup` = `0.2.2`
+
+**Bug fixes:**
+
+ * Changelog valid filenames\
+   Creating filename from the title could create invalid paths. This
+   commits change the way the filename is  created from the title
+   removing many of the special chars.
+ * Error removing changelog entries\
+   Changelog entries that are processed while doing a release that is not
+   a release candidate were raising a Git error.
+ * Ignore unreleased directory when publishing\
+   Publish command continues the execution if the directory
+   `releases/unreleased` doesn't exist.
+ * Option to include branch in `publish` command\
+   Include the `--remote-branch <branch>` option in `publish` to push to
+   a specific remote branch. By default it is `master`.
+ * Invalid release candidate version number when adding new changes\
+   `semverup` was not increasing the correct version number when the old
+   version was a release candidate and a new changelog was included.
+   Before it increased `0.0.5-rc.1` to `0.0.5-rc.2` when a minor
+   changelog entry was added while it should be `0.1.0-rc.1`.
+
+**Breaking changes:**
+
+ * New categories definition (#55)\
+   Previously, only the `fixed` notes incremented the `patch` version,
+   and the other changes incremented MINOR. We updated this behavior.
+   From now on, `changed` and `removed` entries increment major version.
+   `added`, `deprecated`, `security`, `performance` and `other` increment
+   the minor version. `Fixed` and `dependency` increment the patch
+   version. If the version is 0.x.x new entries will upgrade minor
+   version at most.
+
+**Dependencies updateds:**
+
+ * Update PyYAML version and drop Python 3.7\
+   PyYAML dependency updated to support Python 3.10 and drop Python 3.7
+   support
+
+
 ## Release Tools 0.6.0-rc.2 - (2023-08-25)
 
 **New features:**
