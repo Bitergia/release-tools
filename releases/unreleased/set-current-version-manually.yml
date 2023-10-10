@@ -1,0 +1,10 @@
+---
+title: Set current version manually in semverup
+category: added
+author: Eva Millán <evamillan@bitergia.com>
+issue: null
+notes: >
+  Users can pass the current project version number to the
+  `semverup` command using the `--current-version=VERSION_NUMBER`
+  argument. This is useful for non-Python projects because it avoids
+  having to look for the version in a `_version.py` file.

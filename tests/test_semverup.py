@@ -62,6 +62,9 @@ CHANGELOG_INVALID_ENTRY_ERROR = (
 MOCK_REPOSIORY_ERROR = (
     "Error: mock repository error"
 )
+INVALID_CURRENT_VERSION = (
+    r"Error: version number 'invalid' is not a valid semver string"
+)
 
 
 class TestSemVerUp(unittest.TestCase):
@@ -878,6 +881,53 @@ class TestSemVerUp(unittest.TestCase):
                 _ = semverup.get_next_version(current_version=in_version,
                                               bump_version=case[1],
                                               do_prerelease=case[2])
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_current_version_arg(self, mock_project):
+        """Check whether it uses the given --current-version instead of version file"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_files(version_file, project_file, "0.1.0")
+            self.setup_unreleased_entries(dirpath)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup, args=['--current-version=2.0.0', '--dry-run'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "2.1.0\n")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_current_version_invalid_format(self, mock_project):
+        """Check whether it fails when --current-version has an invalid format"""
+
+        runner = click.testing.CliRunner(mix_stderr=False)
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_version_file(version_file, "0.1.0")
+            self.setup_unreleased_entries(dirpath)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup, args=['--current-version=invalid'])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], INVALID_CURRENT_VERSION)
 
 
 if __name__ == '__main__':
