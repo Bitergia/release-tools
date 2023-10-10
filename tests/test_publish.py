@@ -706,6 +706,40 @@ class TestPublish(unittest.TestCase):
             mock_project.return_value.repo.push.assert_any_call('myremote', 'main')
             mock_project.return_value.repo.push.assert_any_call('myremote', '0.8.10')
 
+    @unittest.mock.patch('release_tools.publish.read_changelog_entries')
+    @unittest.mock.patch('release_tools.publish.Project')
+    def test_add_all(self, mock_project, mock_read_changelog):
+        """Test if '--add-all' adds all files to the release commit."""
+        version_number = "0.8.10"
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            os.path.join(fs, 'package.json')
+            os.path.join(fs, 'Dockerfile')
+            notes_file = os.path.join(fs, version_number + '.md')
+            news_file = os.path.join(fs, 'NEWS')
+            authors_file = os.path.join(fs, 'AUTHORS')
+
+            self.setup_release_notes(fs, notes_file, newsfile=news_file, authorsfile=authors_file)
+
+            mock_project.return_value.unreleased_processed_entries_path = fs
+            mock_project.return_value.releases_path = fs
+            mock_project.return_value.news_file = news_file
+            mock_project.return_value.authors_file = authors_file
+
+            # Run the command
+            result = runner.invoke(publish.publish,
+                                   [version_number, "John Smith <jsmith@example.org>",
+                                    "--add-all"])
+            self.assertEqual(result.exit_code, 0)
+
+            # Check mock calls
+            mock_project.return_value.repo.add_all.assert_called()
+            mock_project.return_value.repo.add.assert_any_call(notes_file)
+            mock_project.return_value.repo.add.assert_any_call(news_file)
+            mock_project.return_value.repo.add.assert_any_call(authors_file)
+
 
 if __name__ == '__main__':
     unittest.main()
