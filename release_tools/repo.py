@@ -54,6 +54,10 @@ class GitHandler:
         cmd = ['git', 'add', filename]
         self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
 
+    def add_all(self):
+        cmd = ['git', 'add', '-A']
+        self._exec(cmd, cwd=self.dirpath, env=self.gitenv)
+
     def rm(self, filename):
         cmd = ['git', 'rm', '-f', filename]
         self._exec(cmd, cwd=self.dirpath, env=self.gitenv)

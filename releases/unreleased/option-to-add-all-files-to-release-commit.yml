@@ -1,0 +1,11 @@
+---
+title: Option to add all files to release commit
+category: added
+author: Eva Millán <evamillan@bitergia.com>
+issue: null
+notes: >
+  To include all changed files in the release commit,
+  add the `--add-all` flag to the `publish` command.
+  This is useful for non-Python projects that may
+  need to change the version number in files other
+  than '_version.py'.
