@@ -1,4 +1,4 @@
-# Release Tools [![Build Status](https://github.com/Bitergia/release-tools/workflows/tests/badge.svg)](https://github.com/Bitergia/release-tools/actions?query=workflow:tests+branch:master+event:push) [![Coverage Status](https://coveralls.io/repos/github/Bitergia/release-tools/badge.svg?branch=master)](https://coveralls.io/github/Bitergia/release-tools?branch=master)
+# Release Tools [![Build Status](https://github.com/Bitergia/release-tools/workflows/tests/badge.svg)](https://github.com/Bitergia/release-tools/actions?query=workflow:tests+branch:main+event:push) [![Coverage Status](https://coveralls.io/repos/github/Bitergia/release-tools/badge.svg?branch=main)](https://coveralls.io/github/Bitergia/release-tools?branch=main)
 Set of tools to generate Python releases.
 
 With this package, Python maintainers are able to automate
