@@ -322,8 +322,12 @@ def write_version_number_pyproject(filepath, version):
     fd = tomlkit.toml_file.TOMLFile(filepath)
 
     metadata = fd.read()
-    poetry_metadata = metadata["tool"]["poetry"]
-    poetry_metadata["version"] = str(version)
+    if "project" in metadata:
+        metadata["project"]["version"] = str(version)
+    elif "tool" in metadata and "poetry" in metadata["tool"]:
+        metadata["tool"]["poetry"]["version"] = str(version)
+    else:
+        raise click.ClickException("Invalid pyproject file")
     fd.write(metadata)
 
 
