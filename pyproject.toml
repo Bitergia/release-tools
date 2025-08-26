@@ -45,7 +45,7 @@ PyYAML = "^6.0.1"
 semver = "^2.9"
 tomlkit = "^0.5.8"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.1"
 coverage = "^7.2.3"
 

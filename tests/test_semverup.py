@@ -93,6 +93,14 @@ class TestSemVerUp(unittest.TestCase):
             fd.write("version = \"{}\"\n".format(version))
 
     @staticmethod
+    def setup_pyproject_file_pep621(filepath, version):
+        """Set up an initial version value in the pyproject file using PEP 621 format"""
+
+        with open(filepath, mode='w') as fd:
+            fd.write("[project]\n")
+            fd.write("version = \"{}\"\n".format(version))
+
+    @staticmethod
     def setup_unreleased_entries(dirpath, only_fixed=False):
         """Set up a set of unreleased entry files"""
 
@@ -155,6 +163,17 @@ class TestSemVerUp(unittest.TestCase):
         poetry_metadata = metadata["tool"]["poetry"]
 
         return poetry_metadata["version"]
+
+    @staticmethod
+    def read_version_number_from_pyproject_pep621(filepath):
+        """Returns the version number stored in a PEP 621 format pyproject file"""
+
+        fd = tomlkit.toml_file.TOMLFile(filepath)
+
+        metadata = fd.read()
+        project_metadata = metadata["project"]
+
+        return project_metadata["version"]
 
     @unittest.mock.patch('release_tools.semverup.Project')
     def test_version_is_updated(self, mock_project):
@@ -928,6 +947,37 @@ class TestSemVerUp(unittest.TestCase):
 
             lines = result.stderr.split('\n')
             self.assertRegex(lines[-2], INVALID_CURRENT_VERSION)
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_pyproject_pep621_format_version_update(self, mock_project):
+        """Check whether version is updated in PEP 621 format pyproject.toml"""
+
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_version_file(version_file, "0.1.0")
+            self.setup_pyproject_file_pep621(project_file, "0.1.0")
+            self.setup_unreleased_entries(dirpath)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup)
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "0.2.0\n")
+
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "0.2.0")
+
+            version = self.read_version_number_from_pyproject_pep621(project_file)
+            self.assertEqual(version, "0.2.0")
 
 
 if __name__ == '__main__':

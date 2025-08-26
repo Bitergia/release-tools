@@ -1,0 +1,8 @@
+---
+title: PEP 621 pyproject version support
+category: added
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+  Add support for updating the version in pyproject.toml using the
+  PEP 621 format
