@@ -888,7 +888,7 @@ class TestSemVerUp(unittest.TestCase):
             ('1.1.0-rc.1', None, True),
         ]
         for case in test_cases:
-            in_version = semver.VersionInfo.parse(case[0])
+            in_version = semver.Version.parse(case[0])
             version = semverup.get_next_version(current_version=in_version,
                                                 bump_version=case[1],
                                                 do_prerelease=case[2])
@@ -896,7 +896,7 @@ class TestSemVerUp(unittest.TestCase):
 
         for case in tests_no_changes:
             with self.assertRaisesRegex(click.ClickException, "no changes found; version number not updated"):
-                in_version = semver.VersionInfo.parse(case[0])
+                in_version = semver.Version.parse(case[0])
                 _ = semverup.get_next_version(current_version=in_version,
                                               bump_version=case[1],
                                               do_prerelease=case[2])

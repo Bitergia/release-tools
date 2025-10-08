@@ -23,8 +23,8 @@ This package allows us to:
 
 ## Requirements
 
- * Python >= 3.7
- * Poetry >= 1.0
+ * Python >= 3.10
+ * Poetry >= 2.0
 
 
 ## Installation
