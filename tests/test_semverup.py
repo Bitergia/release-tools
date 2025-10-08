@@ -272,7 +272,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_minor_number_is_bumped(self, mock_project):
         """Check whether the minor number is bumped when there are minor and patch changes"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -303,7 +303,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_minor_number_is_bumped_in_dev_version(self, mock_project):
         """Check whether the minor number is bumped when there is a major change in dev version"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -335,7 +335,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_major_number_is_bumped(self, mock_project):
         """Check whether the major number is bumped when there is a major change"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -367,7 +367,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_version_number_not_bumped_when_empty_changelog_dir(self, mock_project):
         """Check if the version does not change when no changes are available"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -403,7 +403,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_changelog_dir_not_exists_error(self, mock_project):
         """Check if it returns an error when the changelog dir does not exist"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -436,7 +436,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_changelog_invalid_entry_error(self, mock_project):
         """Check if it returns an error when a changelog entry is invalid"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -478,7 +478,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_repository_error(self, mock_project):
         """Check if it stops working when it encounters RepositoryError exception"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             mock_project.side_effect = RepositoryError('mock repository error')
@@ -494,7 +494,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_version_file_not_found(self, mock_project):
         """Check whether it fails when the version file is not found"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             mock_project.return_value.version_file = None
@@ -518,7 +518,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_version_file_not_exists(self, mock_project):
         """Check whether it fails when the version file does not exist"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -540,7 +540,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_version_not_found(self, mock_project):
         """Check whether it fails when the version string is not found in the file"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -566,7 +566,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_version_invalid_format(self, mock_project):
         """Check whether it fails when the version file has an invalid format"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -589,7 +589,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_pyproject_file_not_found(self, mock_project):
         """Check whether it fails when the pyproject file is not found"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -905,7 +905,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_current_version_arg(self, mock_project):
         """Check whether it uses the given --current-version instead of version file"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -929,7 +929,7 @@ class TestSemVerUp(unittest.TestCase):
     def test_current_version_invalid_format(self, mock_project):
         """Check whether it fails when --current-version has an invalid format"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')

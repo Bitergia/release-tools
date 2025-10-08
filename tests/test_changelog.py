@@ -97,7 +97,7 @@ class TestChangelog(unittest.TestCase):
     def test_entry_repository_error(self, mock_project):
         """Check if it stops working when it encounters RepositoryError exception"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
         user_input = "new change\n1\ny"
 
         with runner.isolated_filesystem() as fs:
@@ -118,7 +118,7 @@ class TestChangelog(unittest.TestCase):
     def test_entry_dry_run(self, mock_project):
         """Check if a changelog entry is created when --dry-run flag is enabled"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
         user_input = "y\n"
 
         with runner.isolated_filesystem() as fs:
@@ -147,7 +147,7 @@ class TestChangelog(unittest.TestCase):
     def test_entry_is_not_overwritten(self, mock_project):
         """Check whether an existing changelog entry is not replaced"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
         user_input = "y\n"
 
         with runner.isolated_filesystem() as fs:
@@ -191,7 +191,7 @@ class TestChangelog(unittest.TestCase):
     def test_overwrite_entry(self, mock_project):
         """Check if it overwrites am existing changelog entry when the proper flag is set"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
         user_input = "y\n"
 
         with runner.isolated_filesystem() as fs:
@@ -242,7 +242,7 @@ class TestChangelog(unittest.TestCase):
     def test_abort_entry_empty(self, mock_edit, mock_project):
         """Check if it stops the process when the content of the entry to create is empty"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
         user_input = "new change\n1\ny"
 
         with runner.isolated_filesystem() as fs:
@@ -283,7 +283,7 @@ class TestChangelog(unittest.TestCase):
     def test_entries_dir_not_created(self, mock_project):
         """Check if it stops working when the entries dir is not created"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         # 'n' means the user refuses to create the dir when asked
         user_input = "new change\n1\nn"
@@ -307,7 +307,7 @@ class TestChangelog(unittest.TestCase):
     def test_entries_dir_os_error(self, mock_os, mock_project):
         """Check if it stops working when it encounters OSError exception"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         user_input = "new change\n1\ny"
 
@@ -346,7 +346,7 @@ class TestChangelog(unittest.TestCase):
     def test_validate_good_entry(self, mock_content, mock_project):
         """Check if it creates the file if the content is invalid."""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
         user_input = "new change\n1\ny"
 
         with runner.isolated_filesystem() as fs:
@@ -367,7 +367,7 @@ class TestChangelog(unittest.TestCase):
     def test_validate_bad_entry(self, mock_content, mock_project):
         """Check if it doesn't create the file if the content is invalid."""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         # 'n' means the user refuses to edit the entry when there is an error
         user_input = "new change\n1\ny\nn"
@@ -403,7 +403,7 @@ class TestChangelog(unittest.TestCase):
     def test_invalid_title(self):
         """Check whether title param is validated correctly"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         # Empty titles are not allowed
         result = runner.invoke(changelog.changelog, ['--title', ''])
@@ -427,7 +427,7 @@ class TestChangelog(unittest.TestCase):
     def test_invalid_category(self):
         """Check whether category param is validated correctly"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         # Invalid categories are not allowed
         result = runner.invoke(changelog.changelog, ['--category', 'invalid'])
