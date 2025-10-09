@@ -65,6 +65,9 @@ MOCK_REPOSIORY_ERROR = (
 INVALID_CURRENT_VERSION = (
     r"Error: version number 'invalid' is not a valid semver string"
 )
+INVALID_PRERELEASE_LABEL = (
+    r"Error: cannot change pre-release label from .+ to .+ due to lower precedence"
+)
 
 
 class TestSemVerUp(unittest.TestCase):
@@ -857,30 +860,42 @@ class TestSemVerUp(unittest.TestCase):
     def test_get_next_version(self):
         """Check multiple version changes based on inputs"""
 
-        # arg__version, arg_bump_version, arg_prerelease, expected
+        # arg__version, arg_bump_version, arg_prerelease, prerelease_label, expected
         test_cases = [
-            ('1.1.3', 'PATCH', False, '1.1.4'),
-            ('1.1.3', 'MINOR', False, '1.2.0'),
-            ('1.1.3', 'MAJOR', False, '2.0.0'),
-            ('0.0.1', 'PATCH', True, '0.0.2-rc.1'),
-            ('0.0.1', 'MINOR', True, '0.1.0-rc.1'),
-            ('0.0.1', 'MAJOR', True, '1.0.0-rc.1'),
-            ('0.1.0', 'PATCH', True, '0.1.1-rc.1'),
-            ('0.1.0', 'MINOR', True, '0.2.0-rc.1'),
-            ('0.1.0', 'MAJOR', True, '1.0.0-rc.1'),
-            ('1.0.2-rc.1', 'PATCH', True, '1.0.2-rc.2'),
-            ('1.0.2-rc.1', 'MINOR', True, '1.1.0-rc.1'),
-            ('1.0.2-rc.1', 'MAJOR', True, '2.0.0-rc.1'),
-            ('1.2.0-rc.1', 'PATCH', True, '1.2.0-rc.2'),
-            ('1.2.0-rc.1', 'MINOR', True, '1.2.0-rc.2'),
-            ('1.2.0-rc.1', 'MAJOR', True, '2.0.0-rc.1'),
-            ('1.0.0-rc.1', 'PATCH', True, '1.0.0-rc.2'),
-            ('1.0.0-rc.1', 'MINOR', True, '1.0.0-rc.2'),
-            ('1.0.0-rc.1', 'MAJOR', True, '1.0.0-rc.2'),
-            ('1.1.0-rc.1', 'PATCH', False, '1.1.0'),
-            ('1.1.0-rc.1', 'MINOR', False, '1.1.0'),
-            ('1.1.0-rc.1', 'MAJOR', False, '2.0.0'),
-            ('1.1.0-rc.1', None, False, '1.1.0'),
+            ('1.1.3', 'PATCH', False, None, '1.1.4'),
+            ('1.1.3', 'MINOR', False, None, '1.2.0'),
+            ('1.1.3', 'MAJOR', False, None, '2.0.0'),
+            ('0.0.1', 'PATCH', True, None, '0.0.2-rc.1'),
+            ('0.0.1', 'MINOR', True, None, '0.1.0-rc.1'),
+            ('0.0.1', 'MAJOR', True, None, '1.0.0-rc.1'),
+            ('0.1.0', 'PATCH', True, None, '0.1.1-rc.1'),
+            ('0.1.0', 'MINOR', True, None, '0.2.0-rc.1'),
+            ('0.1.0', 'MAJOR', True, None, '1.0.0-rc.1'),
+            ('1.0.2-rc.1', 'PATCH', True, None, '1.0.2-rc.2'),
+            ('1.0.2-rc.1', 'MINOR', True, None, '1.1.0-rc.1'),
+            ('1.0.2-rc.1', 'MAJOR', True, None, '2.0.0-rc.1'),
+            ('1.2.0-rc.1', 'PATCH', True, None, '1.2.0-rc.2'),
+            ('1.2.0-rc.1', 'MINOR', True, None, '1.2.0-rc.2'),
+            ('1.2.0-rc.1', 'MAJOR', True, None, '2.0.0-rc.1'),
+            ('1.0.0-rc.1', 'PATCH', True, None, '1.0.0-rc.2'),
+            ('1.0.0-rc.1', 'MINOR', True, None, '1.0.0-rc.2'),
+            ('1.0.0-rc.1', 'MAJOR', True, None, '1.0.0-rc.2'),
+            ('1.1.0-rc.1', 'PATCH', False, None, '1.1.0'),
+            ('1.1.0-rc.1', 'MINOR', False, None, '1.1.0'),
+            ('1.1.0-rc.1', 'MAJOR', False, None, '2.0.0'),
+            ('1.1.0-rc.1', None, False, None, '1.1.0'),
+            ('1.1.3', 'PATCH', True, 'alpha', '1.1.4-alpha.1'),
+            ('1.1.3', 'MINOR', True, 'alpha', '1.2.0-alpha.1'),
+            ('1.1.3', 'MAJOR', True, 'alpha', '2.0.0-alpha.1'),
+            ('1.1.3-alpha.1', 'PATCH', True, None, '1.1.3-alpha.2'),
+            ('1.1.3-alpha.1', 'MINOR', True, None, '1.2.0-alpha.1'),
+            ('1.1.3-alpha.1', 'MAJOR', True, None, '2.0.0-alpha.1'),
+            ('1.1.3-alpha.1', 'PATCH', True, 'beta', '1.1.3-beta.1'),
+            ('1.1.3-alpha.1', 'MINOR', True, 'beta', '1.2.0-beta.1'),
+            ('1.1.3-alpha.1', 'MAJOR', True, 'beta', '2.0.0-beta.1'),
+            ('1.1.3-alpha.1', 'PATCH', False, None, '1.1.3'),
+            ('1.1.3-alpha.1', 'MINOR', False, None, '1.2.0'),
+            ('1.1.3-alpha.1', 'MAJOR', False, None, '2.0.0'),
         ]
         tests_no_changes = [
             ('1.1.0', None, True),
@@ -891,8 +906,9 @@ class TestSemVerUp(unittest.TestCase):
             in_version = semver.Version.parse(case[0])
             version = semverup.get_next_version(current_version=in_version,
                                                 bump_version=case[1],
-                                                do_prerelease=case[2])
-            self.assertEqual(str(version), case[3])
+                                                do_prerelease=case[2],
+                                                pre_label=case[3])
+            self.assertEqual(str(version), case[4])
 
         for case in tests_no_changes:
             with self.assertRaisesRegex(click.ClickException, "no changes found; version number not updated"):
@@ -978,6 +994,104 @@ class TestSemVerUp(unittest.TestCase):
 
             version = self.read_version_number_from_pyproject_pep621(project_file)
             self.assertEqual(version, "0.2.0")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_entries_and_prerelease_label(self, mock_project):
+        """
+        Check when calling semverup with changelog entries, --pre-release, and
+        --pre-release-label options, a release candidate is generated
+        """
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            dirpath = os.path.join(fs, 'releases', 'unreleased')
+            mock_project.return_value.unreleased_changes_path = dirpath
+
+            self.setup_files(version_file, project_file, "0.8.10")
+            self.setup_unreleased_entries(dirpath, only_fixed=True)
+
+            # Run the script command
+            result = runner.invoke(semverup.semverup, args=['--pre-release',
+                                                            '--pre-release-label', 'beta'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "0.8.11-beta.1\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "0.8.11-beta.1")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "0.8.11-beta.1")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_force_version_prerelease_label(self, mock_project):
+        """
+        Check when calling semverup with --bump-version, --pre-release, and
+        --pre-release-label options, a release candidate is created with the right label
+        """
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            self.setup_files(version_file, project_file, "0.8.10")
+
+            # Run the script command for major
+            result = runner.invoke(semverup.semverup, ['--bump-version', 'major', '--pre-release',
+                                                       '--pre-release-label', 'alpha'])
+            self.assertEqual(result.exit_code, 0)
+            self.assertEqual(result.stdout, "1.0.0-alpha.1\n")
+
+            # Version changed in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "1.0.0-alpha.1")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "1.0.0-alpha.1")
+
+    @unittest.mock.patch('release_tools.semverup.Project')
+    def test_fail_prerelease_label_lower_precedence(self, mock_project):
+        """
+        Check when calling semverup with --bump-version, --pre-release, and
+        --pre-release-label options, with a label with lower precedence (alpha instead
+        of rc), it fails.
+        """
+        runner = click.testing.CliRunner()
+
+        with runner.isolated_filesystem() as fs:
+            version_file = os.path.join(fs, '_version.py')
+            mock_project.return_value.version_file = version_file
+
+            project_file = os.path.join(fs, 'pyproject.toml')
+            mock_project.return_value.pyproject_file = project_file
+
+            self.setup_files(version_file, project_file, "1.0.0-rc.1")
+
+            # Run the script
+
+            result = runner.invoke(semverup.semverup, ['--bump-version', 'major', '--pre-release',
+                                                       '--pre-release-label', 'alpha'])
+            self.assertEqual(result.exit_code, 1)
+
+            lines = result.stderr.split('\n')
+            self.assertRegex(lines[-2], INVALID_PRERELEASE_LABEL)
+
+            # Version didn't change in files
+            version = self.read_version_number(version_file)
+            self.assertEqual(version, "1.0.0-rc.1")
+
+            version = self.read_version_number_from_pyproject(project_file)
+            self.assertEqual(version, "1.0.0-rc.1")
 
 
 if __name__ == '__main__':

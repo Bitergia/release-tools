@@ -1,0 +1,8 @@
+---
+title: Semverup pre-release label option
+category: added
+author: Jose Javier Merchante <jjmerchante@bitergia.com>
+issue: null
+notes: >
+  Include a new option in semverup command to allow defining
+  the pre-release label.
