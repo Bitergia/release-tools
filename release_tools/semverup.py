@@ -103,7 +103,7 @@ def semverup(dry_run, bump_version, pre_release, current_version):
 
     if current_version:
         try:
-            current_version = semver.parse_version_info(current_version)
+            current_version = semver.Version.parse(current_version)
         except ValueError:
             msg = "version number '{}' is not a valid semver string"
             msg = msg.format(current_version)
@@ -172,7 +172,7 @@ def read_version_number(filepath):
         raise click.ClickException(msg)
 
     try:
-        version = semver.parse_version_info(match)
+        version = semver.Version.parse(match)
     except ValueError:
         msg = "version number '{}' in {} is not a valid semver string"
         msg = msg.format(match, filepath)

@@ -213,7 +213,7 @@ class TestPublish(unittest.TestCase):
     def test_publish_repository_error(self, mock_project):
         """Check if it stops working when it encounters RepositoryError exception"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             mock_project.side_effect = RepositoryError('mock repository error')
@@ -232,7 +232,7 @@ class TestPublish(unittest.TestCase):
             self, mock_project, mock_remove_unreleased_changelog):
         """Check if it stops working when it encounters RepositoryError exception"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             mock_remove_unreleased_changelog.side_effect = RepositoryError('mock repository error')
@@ -272,7 +272,7 @@ class TestPublish(unittest.TestCase):
     def test_only_publish_no_push_error(self, mock_project):
         """Test if fails when '--only-push' is set but not remote is set."""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             # Run the command
@@ -343,7 +343,7 @@ class TestPublish(unittest.TestCase):
             'file3': 'content'
         }
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             pyproject_file = os.path.join(fs, 'pyproject.toml')
@@ -386,7 +386,7 @@ class TestPublish(unittest.TestCase):
             'file3': 'content'
         }
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -429,7 +429,7 @@ class TestPublish(unittest.TestCase):
             'file3': 'content'
         }
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -474,7 +474,7 @@ class TestPublish(unittest.TestCase):
             'file3': 'content'
         }
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -524,7 +524,7 @@ class TestPublish(unittest.TestCase):
             'file3': 'content'
         }
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')
@@ -575,7 +575,7 @@ class TestPublish(unittest.TestCase):
         }
         version_number = "0.8.10"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             version_file = os.path.join(fs, '_version.py')

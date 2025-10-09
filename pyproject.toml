@@ -38,12 +38,12 @@ notes = 'release_tools.notes:notes'
 publish = 'release_tools.publish:publish'
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 
-click = "^7.0"
+click = "^8.3.0"
 PyYAML = "^6.0.1"
-semver = "^2.9"
-tomlkit = "^0.5.8"
+semver = "^3.0.4"
+tomlkit = "^0.13.3"
 
 [tool.poetry.group.dev.dependencies]
 flake8 = "^7.1.1"

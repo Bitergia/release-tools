@@ -177,7 +177,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -213,7 +213,7 @@ class TestNotes(unittest.TestCase):
     def test_entry_repository_error(self, mock_project):
         """Check if it stops working when it encounters RepositoryError exception"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -238,7 +238,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -270,7 +270,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -302,7 +302,7 @@ class TestNotes(unittest.TestCase):
     def test_authors_update(self, mock_project):
         """Check if it updates the authors file when the flag is set"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -328,7 +328,7 @@ class TestNotes(unittest.TestCase):
     def test_authors_update_no_new_line(self, mock_project):
         """Check if it updates the authors file when the flag is set"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -357,7 +357,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -389,7 +389,7 @@ class TestNotes(unittest.TestCase):
     def test_authors_empty_file(self, mock_project):
         """Check if it creates an authors file when it does not exist"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -418,7 +418,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -445,7 +445,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -488,7 +488,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -521,7 +521,7 @@ class TestNotes(unittest.TestCase):
     def test_abort_empty_notes(self, mock_project, mock_compose):
         """Check if it stops the process when the content of release notes is empty"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -545,7 +545,7 @@ class TestNotes(unittest.TestCase):
     def test_error_reading_entries(self, mock_project, mock_read_entries):
         """Check if it stops the process when there is an error reading changelog entries"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -568,7 +568,7 @@ class TestNotes(unittest.TestCase):
     def test_changelog_dir_not_exists_error(self, mock_project):
         """Check if it returns an error when the changelog dir does not exist"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -591,7 +591,7 @@ class TestNotes(unittest.TestCase):
 
         mock_utcnow.return_value = "2019-01-01"
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         with runner.isolated_filesystem() as fs:
             changes_path = os.path.join(fs, 'releases', 'unreleased')
@@ -642,7 +642,7 @@ class TestNotes(unittest.TestCase):
     def test_invalid_name(self):
         """Check whether name argument is validated correctly"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         # Empty titles are not allowed
         result = runner.invoke(notes, [''])
@@ -666,7 +666,7 @@ class TestNotes(unittest.TestCase):
     def test_invalid_version(self):
         """Check whether version argument is validated correctly"""
 
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
 
         # Empty titles are not allowed
         result = runner.invoke(notes, ['release-tools', ''])
