@@ -54,9 +54,12 @@ VERSION_FILE_TEMPLATE = (
               help="Increase only the defined version.")
 @click.option('--pre-release', is_flag=True,
               help="Create a new release candidate version.")
+@click.option('--pre-release-label',
+              default=None,
+              help="Label to use for the pre-release version. Use the current label or rc by default.")
 @click.option('--current-version',
               help="Use the given version instead of the version file.")
-def semverup(dry_run, bump_version, pre_release, current_version):
+def semverup(dry_run, bump_version, pre_release, pre_release_label, current_version):
     """Increment version number following semver specification.
 
     This script will bump up the version number of a package in a
@@ -93,9 +96,21 @@ def semverup(dry_run, bump_version, pre_release, current_version):
     increase the pre-release part of the version. If '--pre-release' is not used,
     it will remove any pre-release metadata from the version.
 
+    You can also use '--pre-release-label' to customize the identifier used for
+    the pre-release version. By default, is the current pre-release identifier,
+    or 'rc' if not defined.
+
+    If you use a different identifier than the current pre-release identifier, and
+    has a lower precedence, the command will fail. For example, if the current version
+    is 1.0.0-rc.1, and you try to create an alpha version, it will fail because alpha
+    has lower precedence than rc.
+
     More info about semver specification can be found in the next
     link: https://semver.org/.
     """
+    if pre_release_label and not pre_release:
+        raise click.ClickException("--pre-release-label option requires --pre-release to be set")
+
     try:
         project = Project(os.getcwd())
     except RepositoryError as e:
@@ -115,9 +130,9 @@ def semverup(dry_run, bump_version, pre_release, current_version):
 
     # Determine the new version and produce the output
     if bump_version:
-        new_version = get_next_version(current_version, bump_version, pre_release)
+        new_version = get_next_version(current_version, bump_version, pre_release, pre_release_label)
     else:
-        new_version = determine_new_version_number(project, current_version, pre_release)
+        new_version = determine_new_version_number(project, current_version, pre_release, pre_release_label)
 
     if not dry_run:
         # Get the pyproject file
@@ -181,13 +196,13 @@ def read_version_number(filepath):
     return version
 
 
-def get_next_version(current_version, bump_version, do_prerelease=False):
+def get_next_version(current_version, bump_version, do_prerelease=False, pre_label=None):
     """Increment version number based on bump_version choice and do_prerelease"""
 
     if current_version.prerelease:
-        next_version = _get_next_version_from_prerelease(current_version, bump_version, do_prerelease)
+        next_version = _get_next_version_from_prerelease(current_version, bump_version, do_prerelease, pre_label)
     else:
-        next_version = _get_next_version_from_final_release(current_version, bump_version, do_prerelease)
+        next_version = _get_next_version_from_final_release(current_version, bump_version, do_prerelease, pre_label)
 
     if not next_version:
         msg = "no changes found; version number not updated"
@@ -196,10 +211,22 @@ def get_next_version(current_version, bump_version, do_prerelease=False):
     return next_version
 
 
-def _get_next_version_from_prerelease(current_version, bump_version, do_prerelease):
-    """Determine the next version number when the current version is a release candidate"""
+def _get_next_version_from_prerelease(current_version, bump_version, do_prerelease, pre_label):
+    """Determine the next version number when the current version is a prerelease"""
 
     next_version = None
+
+    # Check if the new pre-release label is different from the current one
+    current_pre_label = current_version.prerelease.split('.')[0]
+    if not pre_label:
+        pre_label = current_pre_label
+    elif pre_label != current_pre_label:
+        # Labels are compared in lexical order (https://semver.org/#spec-item-11)
+        if current_pre_label > pre_label:
+            msg = f"cannot change pre-release label from {current_pre_label} to {pre_label} due to lower precedence"
+            raise click.ClickException(msg)
+        # Update the label and reset the number to 0 (e.g. 0.1.0-alpha.2 >> 0.1.0-beta.0)
+        current_version = current_version.replace(prerelease=f"{pre_label}.0")
 
     if bump_version == 'MINOR' and current_version.patch != 0:
         # 0.1.1-rc.2 >> 0.2.0(-rc.1)
@@ -211,10 +238,10 @@ def _get_next_version_from_prerelease(current_version, bump_version, do_prerelea
     if do_prerelease:
         if next_version:
             # New version and do prerelease
-            next_version = next_version.bump_prerelease()
+            next_version = next_version.bump_prerelease(token=pre_label)
         elif bump_version:
             # e.g. 0.2.0-rc.1 and minor changelog and do prerelease >> 0.2.0-rc.2
-            next_version = current_version.bump_prerelease()
+            next_version = current_version.bump_prerelease(token=pre_label)
     else:
         # Remove prerelease metadata from the version
         if next_version:
@@ -225,7 +252,7 @@ def _get_next_version_from_prerelease(current_version, bump_version, do_prerelea
     return next_version
 
 
-def _get_next_version_from_final_release(current_version, bump_version, do_prerelease):
+def _get_next_version_from_final_release(current_version, bump_version, do_prerelease, pre_label):
     """Determine the next version number when the current version is a final release"""
 
     next_version = None
@@ -242,12 +269,12 @@ def _get_next_version_from_final_release(current_version, bump_version, do_prere
 
     if next_version and do_prerelease:
         # 0.2.1 >> 0.2.1-rc.1
-        next_version = next_version.bump_prerelease()
+        next_version = next_version.bump_prerelease(token=pre_label or 'rc')
 
     return next_version
 
 
-def determine_new_version_number(project, current_version, prerelease):
+def determine_new_version_number(project, current_version, prerelease, pre_label):
     """Guess the next version number."""
 
     entries = read_unreleased_changelog_entries(project)
@@ -277,7 +304,7 @@ def determine_new_version_number(project, current_version, prerelease):
     else:
         bump_version = None
 
-    next_version = get_next_version(current_version, bump_version, prerelease)
+    next_version = get_next_version(current_version, bump_version, prerelease, pre_label)
 
     if not next_version:
         msg = "no changes found; version number not updated"
